@@ -32,6 +32,14 @@
 namespace v8 {
 namespace internal {
 
+template<typename T>
+static std::string to_string(T arg)
+{
+    std::stringstream ss;
+    ss << arg;
+    return ss.str();
+}
+
 char IC::TransitionMarkFromState(IC::State state) {
   switch (state) {
     case UNINITIALIZED:
@@ -162,12 +170,11 @@ void IC::TraceIC(const char* type, Handle<Object> name, State old_state,
   if (map != nullptr) {
     ic_info.is_dictionary_map = map->is_dictionary_map();
     ic_info.number_of_own_descriptors = map->NumberOfOwnDescriptors();
-    ic_info.instance_type = std::to_string(map->instance_type());
+    ic_info.instance_type = to_string(map->instance_type());
   }
   // TODO(lpy) Add name as key field in ICStats.
   ICStats::instance()->End();
 }
-
 
 #define TRACE_IC(type, name) TraceIC(type, name)
 

@@ -24,6 +24,14 @@ const bool kStackTypeArray = true;
 #define DEBUG_POP_CONTAINER() ((void)0)
 #endif
 
+template<typename T>
+std::string to_string(T arg)
+{
+    std::stringstream ss;
+    ss << arg;
+    return ss.str();
+}
+
 void EscapeAndAppendString(const char* value, std::string* result) {
   *result += '"';
   char number_buffer[10];
@@ -75,7 +83,7 @@ TracedValue::~TracedValue() {
 void TracedValue::SetInteger(const char* name, int value) {
   DCHECK_CURRENT_CONTAINER_IS(kStackTypeDict);
   WriteName(name);
-  data_ += std::to_string(value);
+  data_ += to_string(value);
 }
 
 void TracedValue::SetDouble(const char* name, double value) {
@@ -116,7 +124,7 @@ void TracedValue::BeginArray(const char* name) {
 void TracedValue::AppendInteger(int value) {
   DCHECK_CURRENT_CONTAINER_IS(kStackTypeArray);
   WriteComma();
-  data_ += std::to_string(value);
+  data_ += to_string(value);
 }
 
 void TracedValue::AppendDouble(double value) {

@@ -168,7 +168,7 @@ struct FloatMatcher final : public ValueMatcher<T, kOpcode> {
     return this->HasValue() && std::isnormal(this->Value());
   }
   bool IsInteger() const {
-    return this->HasValue() && std::nearbyint(this->Value()) == this->Value();
+    return this->HasValue() && ::nearbyint(this->Value()) == this->Value();
   }
   bool IsPositiveOrNegativePowerOf2() const {
     if (!this->HasValue() || (this->Value() == 0.0)) {
