@@ -97,8 +97,7 @@ int OS::ActivationFrameAlignment() {
 
 
 intptr_t OS::CommitPageSize() {
-  static intptr_t page_size = getpagesize();
-  return page_size;
+  return PAGE_SIZE;
 }
 
 void* OS::Allocate(const size_t requested, size_t* allocated,
