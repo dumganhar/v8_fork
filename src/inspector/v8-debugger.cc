@@ -172,8 +172,11 @@ V8Debugger::V8Debugger(v8::Isolate* isolate, V8InspectorImpl* inspector)
       m_ignoreScriptParsedEventsCounter(0),
       m_maxAsyncCallStacks(kMaxAsyncTaskStacks),
       m_maxAsyncCallStackDepth(0),
-      m_pauseOnExceptionsState(v8::debug::NoBreakOnException),
-      m_wasmTranslation(isolate) {}
+      m_pauseOnExceptionsState(v8::debug::NoBreakOnException)
+#ifdef ENABLE_WASM
+      ,m_wasmTranslation(isolate) 
+#endif
+      {}
 
 V8Debugger::~V8Debugger() {}
 
@@ -199,7 +202,9 @@ void V8Debugger::disable() {
   m_debuggerContext.Reset();
   allAsyncTasksCanceled();
   m_taskWithScheduledBreak = nullptr;
+#ifdef ENABLE_WASM
   m_wasmTranslation.Clear();
+#endif
   v8::debug::SetDebugDelegate(m_isolate, nullptr);
   v8::debug::SetOutOfMemoryCallback(m_isolate, nullptr, nullptr);
   m_isolate->RestoreOriginalHeapLimit();
@@ -666,9 +671,12 @@ void V8Debugger::ScriptCompiled(v8::Local<v8::debug::Script> script,
                                 bool has_compile_error) {
   V8DebuggerAgentImpl* agent = agentForScript(m_inspector, script);
   if (!agent) return;
+#ifdef ENABLE_WASM
   if (script->IsWasm()) {
     m_wasmTranslation.AddScript(script.As<v8::debug::WasmScript>(), agent);
-  } else if (m_ignoreScriptParsedEventsCounter == 0) {
+  } else 
+#endif
+  if (m_ignoreScriptParsedEventsCounter == 0) {
     agent->didParseSource(
         V8DebuggerScript::Create(m_isolate, script, inLiveEditScope),
         !has_compile_error);
@@ -1134,7 +1142,9 @@ std::shared_ptr<StackFrame> V8Debugger::symbolize(
   std::shared_ptr<StackFrame> frame(new StackFrame(v8Frame));
   // TODO(clemensh): Figure out a way to do this translation only right before
   // sending the stack trace over wire.
+#ifdef ENABLE_WASM
   if (v8Frame->IsWasm()) frame->translate(&m_wasmTranslation);
+#endif
   if (m_maxAsyncCallStackDepth) {
     m_framesCache[frameId] = frame;
   }

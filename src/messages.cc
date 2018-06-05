@@ -12,8 +12,11 @@
 #include "src/keys.h"
 #include "src/objects/frame-array-inl.h"
 #include "src/string-builder.h"
+
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
 #include "src/wasm/wasm-objects.h"
+#endif
 
 namespace v8 {
 namespace internal {
@@ -636,6 +639,7 @@ Handle<Script> JSStackFrame::GetScript() const {
   return handle(Script::cast(function_->shared()->script()), isolate_);
 }
 
+#ifdef ENABLE_WASM
 WasmStackFrame::WasmStackFrame() {}
 
 void WasmStackFrame::FromFrameArray(Isolate* isolate, Handle<FrameArray> array,
@@ -799,6 +803,8 @@ MaybeHandle<String> AsmJsWasmStackFrame::ToString() {
   return builder.Finish();
 }
 
+#endif // #ifdef ENABLE_WASM
+
 FrameArrayIterator::FrameArrayIterator(Isolate* isolate,
                                        Handle<FrameArray> array, int frame_ix)
     : isolate_(isolate), array_(array), next_frame_ix_(frame_ix) {}
@@ -820,6 +826,7 @@ StackFrameBase* FrameArrayIterator::Frame() {
       // JavaScript Frame.
       js_frame_.FromFrameArray(isolate_, array_, next_frame_ix_);
       return &js_frame_;
+#ifdef ENABLE_WASM
     case FrameArray::kIsWasmFrame:
     case FrameArray::kIsWasmInterpretedFrame:
       // Wasm Frame:
@@ -829,6 +836,7 @@ StackFrameBase* FrameArrayIterator::Frame() {
       // Asm.js Wasm Frame:
       asm_wasm_frame_.FromFrameArray(isolate_, array_, next_frame_ix_);
       return &asm_wasm_frame_;
+#endif
     default:
       UNREACHABLE();
       return nullptr;

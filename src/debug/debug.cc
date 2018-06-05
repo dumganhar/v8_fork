@@ -29,8 +29,10 @@
 #include "src/log.h"
 #include "src/messages.h"
 #include "src/snapshot/natives.h"
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
 #include "src/wasm/wasm-objects.h"
+#endif
 
 #include "include/v8-debug.h"
 
@@ -696,12 +698,14 @@ bool Debug::SetBreakPointForScript(Handle<Script> script,
                                    Handle<Object> break_point_object,
                                    int* source_position,
                                    BreakPositionAlignment alignment) {
+#ifdef ENABLE_WASM
   if (script->type() == Script::TYPE_WASM) {
     Handle<WasmCompiledModule> compiled_module(
         WasmCompiledModule::cast(script->wasm_compiled_module()), isolate_);
     return WasmCompiledModule::SetBreakPoint(compiled_module, source_position,
                                              break_point_object);
   }
+#endif
 
   HandleScope scope(isolate_);
 
@@ -1008,6 +1012,7 @@ void Debug::PrepareStep(StepAction step_action) {
   StackTraceFrameIterator frames_it(isolate_, frame_id);
   StandardFrame* frame = frames_it.frame();
 
+#ifdef ENABLE_WASM
   // Handle stepping in wasm functions via the wasm interpreter.
   if (frame->is_wasm()) {
     // If the top frame is compiled, we cannot step.
@@ -1017,6 +1022,7 @@ void Debug::PrepareStep(StepAction step_action) {
     wasm_frame->wasm_instance()->debug_info()->PrepareStep(step_action);
     return;
   }
+#endif
 
   JavaScriptFrame* js_frame = JavaScriptFrame::cast(frame);
   DCHECK(js_frame->function()->IsJSFunction());
@@ -1076,7 +1082,9 @@ void Debug::PrepareStep(StepAction step_action) {
       bool in_current_frame = true;
       for (; !frames_it.done(); frames_it.Advance()) {
         // TODO(clemensh): Implement stepping out from JS to WASM.
+#ifdef ENABLE_WASM
         if (frames_it.frame()->is_wasm()) continue;
+#endif
         JavaScriptFrame* frame = JavaScriptFrame::cast(frames_it.frame());
         if (last_step_action() == StepIn) {
           // Deoptimize frame to ensure calls are checked for step-in.

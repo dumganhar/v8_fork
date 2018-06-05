@@ -532,6 +532,7 @@ DEFINE_IMPLICATION(minimal, ignition)
 DEFINE_NEG_IMPLICATION(minimal, opt)
 DEFINE_NEG_IMPLICATION(minimal, use_ic)
 
+#ifdef ENABLE_WASM
 // Flags for native WebAssembly.
 DEFINE_BOOL(expose_wasm, true, "expose WASM interface to JavaScript")
 DEFINE_BOOL(assume_asmjs_origin, false,
@@ -570,10 +571,13 @@ DEFINE_BOOL(stress_validate_asm, false, "try to validate everything as asm.js")
 
 DEFINE_BOOL(dump_wasm_module, false, "dump WASM module bytes")
 DEFINE_STRING(dump_wasm_module_path, NULL, "directory to dump wasm modules to")
+#endif // #ifdef ENABLE_WASM
+
 
 DEFINE_INT(typed_array_max_size_in_heap, 64,
            "threshold for in-heap typed array")
 
+#ifdef ENABLE_WASM
 DEFINE_BOOL(wasm_simd_prototype, false,
             "enable prototype simd opcodes for wasm")
 DEFINE_BOOL(wasm_eh_prototype, false,
@@ -609,6 +613,8 @@ DEFINE_BOOL(wasm_lazy_compilation, false,
 // wasm-interpret-all resets {asm-,}wasm-lazy-compilation.
 DEFINE_NEG_IMPLICATION(wasm_interpret_all, asm_wasm_lazy_compilation)
 DEFINE_NEG_IMPLICATION(wasm_interpret_all, wasm_lazy_compilation)
+
+#endif // #ifdef ENABLE_WASM
 
 // Profiler flags.
 DEFINE_INT(frame_count, 1, "number of stack frames inspected by the profiler")
@@ -1147,10 +1153,11 @@ DEFINE_BOOL(trace_regexp_parser, false, "trace regexp parsing")
 // Debugger
 DEFINE_BOOL(print_break_location, false, "print source location on debug break")
 
+#ifdef ENABLE_WASM
 // wasm instance management
 DEFINE_BOOL(trace_wasm_instances, false,
             "trace creation and collection of wasm instances")
-
+#endif
 //
 // Logging and profiling flags
 //
@@ -1299,8 +1306,10 @@ DEFINE_IMPLICATION(print_all_code, trace_codegen)
 DEFINE_BOOL(predictable, false, "enable predictable mode")
 DEFINE_IMPLICATION(predictable, single_threaded)
 DEFINE_NEG_IMPLICATION(predictable, memory_reducer)
-DEFINE_VALUE_IMPLICATION(single_threaded, wasm_num_compilation_tasks, 0)
 
+#ifdef ENABLE_WASM
+DEFINE_VALUE_IMPLICATION(single_threaded, wasm_num_compilation_tasks, 0)
+#endif
 //
 // Threading related flags.
 //

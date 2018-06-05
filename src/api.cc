@@ -74,9 +74,12 @@
 #include "src/value-serializer.h"
 #include "src/version.h"
 #include "src/vm-state-inl.h"
+
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
 #include "src/wasm/wasm-objects.h"
 #include "src/wasm/wasm-result.h"
+#endif
 
 namespace v8 {
 
@@ -3233,10 +3236,12 @@ Maybe<uint32_t> ValueSerializer::Delegate::GetSharedArrayBufferId(
   return Nothing<uint32_t>();
 }
 
+#ifdef ENABLE_WASM
 Maybe<uint32_t> ValueSerializer::Delegate::GetWasmModuleTransferId(
     Isolate* v8_isolate, Local<WasmCompiledModule> module) {
   return Nothing<uint32_t>();
 }
+#endif
 
 void* ValueSerializer::Delegate::ReallocateBufferMemory(void* old_buffer,
                                                         size_t size,
@@ -3326,6 +3331,7 @@ MaybeLocal<Object> ValueDeserializer::Delegate::ReadHostObject(
   return MaybeLocal<Object>();
 }
 
+#ifdef ENABLE_WASM
 MaybeLocal<WasmCompiledModule> ValueDeserializer::Delegate::GetWasmModuleFromId(
     Isolate* v8_isolate, uint32_t id) {
   i::Isolate* isolate = reinterpret_cast<i::Isolate*>(v8_isolate);
@@ -3334,6 +3340,7 @@ MaybeLocal<WasmCompiledModule> ValueDeserializer::Delegate::GetWasmModuleFromId(
       i::MessageTemplate::kDataCloneDeserializationError));
   return MaybeLocal<WasmCompiledModule>();
 }
+#endif
 
 struct ValueDeserializer::PrivateData {
   PrivateData(i::Isolate* i, i::Vector<const uint8_t> data, Delegate* delegate)
@@ -3397,9 +3404,11 @@ void ValueDeserializer::SetSupportsLegacyWireFormat(
   private_->supports_legacy_wire_format = supports_legacy_wire_format;
 }
 
+#ifdef ENABLE_WASM
 void ValueDeserializer::SetExpectInlineWasm(bool expect_inline_wasm) {
   private_->deserializer.set_expect_inline_wasm(expect_inline_wasm);
 }
+#endif
 
 uint32_t ValueDeserializer::GetWireFormatVersion() const {
   CHECK(!private_->has_aborted);
@@ -3565,6 +3574,7 @@ bool Value::IsNumber() const {
 
 bool Value::IsProxy() const { return Utils::OpenHandle(this)->IsJSProxy(); }
 
+#ifdef ENABLE_WASM
 bool Value::IsWebAssemblyCompiledModule() const {
   i::Handle<i::Object> obj = Utils::OpenHandle(this);
   if (!obj->IsJSObject()) return false;
@@ -3572,6 +3582,7 @@ bool Value::IsWebAssemblyCompiledModule() const {
   return js_obj->GetIsolate()->native_context()->wasm_module_constructor() ==
          js_obj->map()->GetConstructor();
 }
+#endif
 
 #define VALUE_IS_SPECIFIC_TYPE(Type, Class)                            \
   bool Value::Is##Type() const {                                       \
@@ -3920,11 +3931,13 @@ void v8::Proxy::CheckCast(Value* that) {
                   "Could not convert to proxy");
 }
 
+#ifdef ENABLE_WASM
 void v8::WasmCompiledModule::CheckCast(Value* that) {
   Utils::ApiCheck(that->IsWebAssemblyCompiledModule(),
                   "v8::WasmCompiledModule::Cast",
                   "Could not convert to wasm compiled module");
 }
+#endif
 
 void v8::ArrayBuffer::CheckCast(Value* that) {
   i::Handle<i::Object> obj = Utils::OpenHandle(that);
@@ -7638,6 +7651,7 @@ MaybeLocal<Proxy> Proxy::New(Local<Context> context, Local<Object> local_target,
   RETURN_ESCAPED(result);
 }
 
+#ifdef ENABLE_WASM
 Local<String> WasmCompiledModule::GetWasmWireBytes() {
   i::Handle<i::JSObject> obj =
       i::Handle<i::JSObject>::cast(Utils::OpenHandle(this));
@@ -7759,6 +7773,8 @@ MaybeLocal<WasmCompiledModule> WasmModuleObjectBuilder::Finish() {
   }
   return WasmCompiledModule::Compile(isolate_, wire_bytes.get(), total_size_);
 }
+
+#endif // #ifdef ENABLE_WASM
 
 // static
 v8::ArrayBuffer::Allocator* v8::ArrayBuffer::Allocator::NewDefaultAllocator() {
@@ -8875,11 +8891,13 @@ void Isolate::SetAllowCodeGenerationFromStringsCallback(
     isolate->set_##InternalName(callback);                     \
   }
 
+#ifdef ENABLE_WASM
 CALLBACK_SETTER(WasmModuleCallback, ExtensionCallback, wasm_module_callback)
 CALLBACK_SETTER(WasmCompileCallback, ExtensionCallback, wasm_compile_callback)
 CALLBACK_SETTER(WasmInstanceCallback, ExtensionCallback, wasm_instance_callback)
 CALLBACK_SETTER(WasmInstantiateCallback, ExtensionCallback,
                 wasm_instantiate_callback)
+#endif
 
 bool Isolate::IsDead() {
   i::Isolate* isolate = reinterpret_cast<i::Isolate*>(this);
@@ -9428,11 +9446,14 @@ bool debug::Script::GetPossibleBreakpoints(
     std::vector<debug::BreakLocation>* locations) const {
   CHECK(!start.IsEmpty());
   i::Handle<i::Script> script = Utils::OpenHandle(this);
+
+#ifdef ENABLE_WASM
   if (script->type() == i::Script::TYPE_WASM) {
     i::Handle<i::WasmCompiledModule> compiled_module(
         i::WasmCompiledModule::cast(script->wasm_compiled_module()));
     return compiled_module->GetPossibleBreakpoints(start, end, locations);
   }
+#endif
 
   i::Script::InitLineEnds(script);
   CHECK(script->line_ends()->IsFixedArray());
@@ -9513,6 +9534,7 @@ v8::debug::Location debug::Script::GetSourceLocation(int offset) const {
   return debug::Location(info.line, info.column);
 }
 
+#ifdef ENABLE_WASM
 debug::WasmScript* debug::WasmScript::Cast(debug::Script* script) {
   CHECK(script->IsWasm());
   return static_cast<WasmScript*>(script);
@@ -9564,6 +9586,7 @@ debug::WasmDisassembly debug::WasmScript::DisassembleFunction(
       i::WasmCompiledModule::cast(script->wasm_compiled_module());
   return compiled_module->DisassembleFunction(function_index);
 }
+#endif // #ifdef ENABLE_WASM
 
 debug::Location::Location(int line_number, int column_number)
     : line_number_(line_number), column_number_(column_number) {

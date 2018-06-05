@@ -658,6 +658,8 @@ PipelineCompilationJob::Status PipelineCompilationJob::FinalizeJobImpl() {
   return SUCCEEDED;
 }
 
+#ifdef ENABLE_WASM
+
 class PipelineWasmCompilationJob final : public CompilationJob {
  public:
   explicit PipelineWasmCompilationJob(
@@ -739,6 +741,8 @@ PipelineWasmCompilationJob::FinalizeJobImpl() {
   pipeline_.FinalizeCode();
   return SUCCEEDED;
 }
+
+#endif // #ifdef ENABLE_WASM
 
 template <typename Phase>
 void PipelineImpl::Run() {
@@ -1810,6 +1814,7 @@ CompilationJob* Pipeline::NewCompilationJob(Handle<JSFunction> function,
   return new PipelineCompilationJob(parse_info, function);
 }
 
+#ifdef ENABLE_WASM
 // static
 CompilationJob* Pipeline::NewWasmCompilationJob(
     CompilationInfo* info, JSGraph* jsgraph, CallDescriptor* descriptor,
@@ -1820,6 +1825,7 @@ CompilationJob* Pipeline::NewWasmCompilationJob(
       info, jsgraph, descriptor, source_positions, protected_instructions,
       allow_signalling_nan);
 }
+#endif
 
 bool Pipeline::AllocateRegistersForTesting(const RegisterConfiguration* config,
                                            InstructionSequence* sequence,

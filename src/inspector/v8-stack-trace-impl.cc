@@ -7,8 +7,10 @@
 #include <algorithm>
 
 #include "src/inspector/v8-debugger.h"
-#include "src/inspector/wasm-translation.h"
 
+#ifdef ENABLE_WASM
+#include "src/inspector/wasm-translation.h"
+#endif
 namespace v8_inspector {
 
 namespace {
@@ -100,10 +102,12 @@ StackFrame::StackFrame(v8::Local<v8::StackFrame> v8Frame)
   DCHECK(m_columnNumber + 1 != v8::Message::kNoColumnInfo);
 }
 
+#ifdef ENABLE_WASM
 void StackFrame::translate(WasmTranslation* wasmTranslation) {
   wasmTranslation->TranslateWasmScriptLocationToProtocolLocation(
       &m_scriptId, &m_lineNumber, &m_columnNumber);
 }
+#endif
 
 const String16& StackFrame::functionName() const { return m_functionName; }
 

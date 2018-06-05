@@ -5,7 +5,9 @@
 #include "src/runtime/runtime-utils.h"
 
 #include "src/arguments.h"
+#ifdef ENABLE_ASMJS
 #include "src/asmjs/asm-js.h"
+#endif
 #include "src/compiler-dispatcher/optimizing-compile-dispatcher.h"
 #include "src/compiler.h"
 #include "src/deoptimizer.h"
@@ -79,6 +81,7 @@ RUNTIME_FUNCTION(Runtime_EvictOptimizedCodeSlot) {
   return function->code();
 }
 
+#ifdef ENABLE_ASMJS
 RUNTIME_FUNCTION(Runtime_InstantiateAsmJs) {
   HandleScope scope(isolate);
   DCHECK_EQ(args.length(), 4);
@@ -121,6 +124,7 @@ RUNTIME_FUNCTION(Runtime_InstantiateAsmJs) {
   }
   return Smi::kZero;
 }
+#endif
 
 RUNTIME_FUNCTION(Runtime_NotifyStubFailure) {
   HandleScope scope(isolate);

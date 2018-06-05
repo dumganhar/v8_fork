@@ -17,8 +17,11 @@
 #include "src/string-stream.h"
 #include "src/visitors.h"
 #include "src/vm-state-inl.h"
+
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
 #include "src/wasm/wasm-objects.h"
+#endif
 
 namespace v8 {
 namespace internal {
@@ -481,6 +484,7 @@ StackFrame::Type StackFrame::ComputeType(const StackFrameIteratorBase* iterator,
           return JAVA_SCRIPT;
         case Code::OPTIMIZED_FUNCTION:
           return OPTIMIZED;
+#ifdef ENABLE_WASM
         case Code::WASM_FUNCTION:
           return WASM_COMPILED;
         case Code::WASM_TO_JS_FUNCTION:
@@ -489,6 +493,7 @@ StackFrame::Type StackFrame::ComputeType(const StackFrameIteratorBase* iterator,
           return JS_TO_WASM;
         case Code::WASM_INTERPRETER_ENTRY:
           return WASM_INTERPRETER_ENTRY;
+#endif
         default:
           // All other types should have an explicit marker
           break;
@@ -510,10 +515,12 @@ StackFrame::Type StackFrame::ComputeType(const StackFrameIteratorBase* iterator,
     case INTERNAL:
     case CONSTRUCT:
     case ARGUMENTS_ADAPTOR:
+#ifdef ENABLE_WASM
     case WASM_TO_JS:
     case WASM_COMPILED:
       return candidate;
     case JS_TO_WASM:
+#endif
     case JAVA_SCRIPT:
     case OPTIMIZED:
     case INTERPRETED:
@@ -809,12 +816,14 @@ void StandardFrame::IterateCompiledFrame(RootVisitor* v) const {
       case STUB:
       case INTERNAL:
       case CONSTRUCT:
+#ifdef ENABLE_WASM
       case JS_TO_WASM:
       case WASM_TO_JS:
       case WASM_COMPILED:
       case WASM_INTERPRETER_ENTRY:
         frame_header_size = TypedFrameConstants::kFixedFrameSizeFromFp;
         break;
+#endif
       case JAVA_SCRIPT:
       case OPTIMIZED:
       case INTERPRETED:
@@ -1192,6 +1201,8 @@ Handle<Context> FrameSummary::JavaScriptFrameSummary::native_context() const {
   return handle(function_->context()->native_context(), isolate());
 }
 
+#ifdef ENABLE_WASM
+
 FrameSummary::WasmFrameSummary::WasmFrameSummary(
     Isolate* isolate, FrameSummary::Kind kind,
     Handle<WasmInstanceObject> instance, bool at_to_number_conversion)
@@ -1273,6 +1284,8 @@ FrameSummary::WasmInterpretedFrameSummary::WasmInterpretedFrameSummary(
       function_index_(function_index),
       byte_offset_(byte_offset) {}
 
+#endif // #ifdef ENABLE_WASM
+
 FrameSummary::~FrameSummary() {
 #define FRAME_SUMMARY_DESTR(kind, type, field, desc) \
   case kind:                                         \
@@ -1317,15 +1330,20 @@ FrameSummary FrameSummary::Get(const StandardFrame* frame, int index) {
     switch (base_.kind()) {                      \
       case JAVA_SCRIPT:                          \
         return java_script_summary_.name();      \
-      case WASM_COMPILED:                        \
-        return wasm_compiled_summary_.name();    \
-      case WASM_INTERPRETED:                     \
-        return wasm_interpreted_summary_.name(); \
       default:                                   \
         UNREACHABLE();                           \
         return ret{};                            \
     }                                            \
   }
+
+#ifdef ENABLE_WASM
+  // belong to the code from above switch case
+      case WASM_COMPILED:                        \
+        return wasm_compiled_summary_.name();    \
+      case WASM_INTERPRETED:                     \
+        return wasm_interpreted_summary_.name(); \
+
+#endif
 
 FRAME_SUMMARY_DISPATCH(Handle<Object>, receiver)
 FRAME_SUMMARY_DISPATCH(int, code_offset)
@@ -1694,6 +1712,8 @@ void StackFrame::PrintIndex(StringStream* accumulator,
   accumulator->Add((mode == OVERVIEW) ? "%5d: " : "[%d]: ", index);
 }
 
+#ifdef ENABLE_WASM
+
 void WasmCompiledFrame::Print(StringStream* accumulator, PrintMode mode,
                               int index) const {
   PrintIndex(accumulator, mode, index);
@@ -1832,6 +1852,8 @@ Object* WasmInterpreterEntryFrame::context() const {
 Address WasmInterpreterEntryFrame::GetCallerStackPointer() const {
   return fp() + ExitFrameConstants::kCallerSPOffset;
 }
+
+#endif // #ifdef ENABLE_WASM
 
 namespace {
 

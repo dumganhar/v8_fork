@@ -10,7 +10,10 @@
 
 #include "src/compiler/node.h"
 #include "src/objects-inl.h"
+
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
+#endif
 
 namespace v8 {
 namespace internal {
@@ -565,6 +568,7 @@ Node* SimdScalarLowering::BuildF64Trunc(Node* input) {
   if (machine()->Float64RoundTruncate().IsSupported()) {
     return graph()->NewNode(machine()->Float64RoundTruncate().op(), input);
   } else {
+#ifdef ENABLE_WASM
     ExternalReference ref =
         ExternalReference::wasm_f64_trunc(jsgraph_->isolate());
     Node* stack_slot =
@@ -588,6 +592,10 @@ Node* SimdScalarLowering::BuildF64Trunc(Node* input) {
     return graph()->NewNode(machine()->Load(LoadRepresentation::Float64()),
                             stack_slot, jsgraph_->Int32Constant(0), call,
                             graph()->start());
+#else
+    assert(false);
+    return nullptr; //cjh
+#endif
   }
 }
 
@@ -823,10 +831,13 @@ void SimdScalarLowering::LowerNode(Node* node) {
           (descriptor->ReturnCount() == 1 &&
            descriptor->GetReturnType(0) == MachineType::Simd128())) {
         // We have to adjust the call descriptor.
+#ifdef ENABLE_WASM
+        assert(false);
         const Operator* op =
             common()->Call(wasm::ModuleEnv::GetI32WasmCallDescriptorForSimd(
                 zone(), descriptor));
         NodeProperties::ChangeOp(node, op);
+#endif
       }
       if (descriptor->ReturnCount() == 1 &&
           descriptor->GetReturnType(0) == MachineType::Simd128()) {

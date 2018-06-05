@@ -13,7 +13,9 @@
 
 #include "src/compiler/node.h"
 #include "src/objects-inl.h"
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
+#endif
 #include "src/zone/zone.h"
 
 namespace v8 {
@@ -296,9 +298,12 @@ void Int64Lowering::LowerNode(Node* node) {
           (descriptor->ReturnCount() == 1 &&
            descriptor->GetReturnType(0) == MachineType::Int64())) {
         // We have to adjust the call descriptor.
+        assert(false);
+#ifdef ENABLE_WASM
         const Operator* op = common()->Call(
             wasm::ModuleEnv::GetI32WasmCallDescriptor(zone(), descriptor));
         NodeProperties::ChangeOp(node, op);
+#endif
       }
       if (descriptor->ReturnCount() == 1 &&
           descriptor->GetReturnType(0) == MachineType::Int64()) {

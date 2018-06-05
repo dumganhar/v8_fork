@@ -18,14 +18,19 @@ namespace v8_inspector {
 
 class AsyncStackTrace;
 class V8Debugger;
+
+#ifdef ENABLE_WASM
 class WasmTranslation;
+#endif
 
 class StackFrame {
  public:
   explicit StackFrame(v8::Local<v8::StackFrame> frame);
   ~StackFrame() = default;
 
+#ifdef ENABLE_WASM
   void translate(WasmTranslation* wasmTranslation);
+#endif
 
   const String16& functionName() const;
   const String16& scriptId() const;

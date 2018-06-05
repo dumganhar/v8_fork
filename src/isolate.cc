@@ -52,8 +52,12 @@
 #include "src/version.h"
 #include "src/visitors.h"
 #include "src/vm-state-inl.h"
+
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
 #include "src/wasm/wasm-objects.h"
+#endif
+
 #include "src/zone/accounting-allocator.h"
 
 namespace v8 {
@@ -556,7 +560,7 @@ Handle<Object> Isolate::CaptureSimpleStackTrace(Handle<JSReceiver> error_object,
                                              Handle<AbstractCode>::cast(code),
                                              offset, flags);
       } break;
-
+#ifdef ENABLE_WASM
       case StackFrame::WASM_COMPILED: {
         WasmCompiledFrame* wasm_frame = WasmCompiledFrame::cast(frame);
         Handle<WasmInstanceObject> instance(wasm_frame->wasm_instance(), this);
@@ -600,7 +604,7 @@ Handle<Object> Isolate::CaptureSimpleStackTrace(Handle<JSReceiver> error_object,
           if (elements->FrameCount() >= limit) break;
         }
       } break;
-
+#endif // #ifdef ENABLE_WASM
       default:
         break;
     }
@@ -656,7 +660,9 @@ class CaptureStackTraceHelper {
 
   Handle<StackFrameInfo> NewStackFrameObject(FrameSummary& summ) {
     if (summ.IsJavaScript()) return NewStackFrameObject(summ.AsJavaScript());
+#ifdef ENABLE_WASM
     if (summ.IsWasm()) return NewStackFrameObject(summ.AsWasm());
+#endif
     UNREACHABLE();
     return factory()->NewStackFrameInfo();
   }
@@ -718,6 +724,7 @@ class CaptureStackTraceHelper {
     return frame;
   }
 
+#ifdef ENABLE_WASM
   Handle<StackFrameInfo> NewStackFrameObject(
       const FrameSummary::WasmFrameSummary& summ) {
     Handle<StackFrameInfo> info = factory()->NewStackFrameInfo();
@@ -739,6 +746,7 @@ class CaptureStackTraceHelper {
     info->set_id(next_id());
     return info;
   }
+#endif
 
  private:
   inline Factory* factory() { return isolate_->factory(); }
@@ -1219,6 +1227,7 @@ Object* Isolate::UnwindAndFindHandler() {
             handler->address() + StackHandlerConstants::kSize, 0);
       }
 
+#ifdef ENABLE_WASM
       case StackFrame::WASM_COMPILED: {
         if (trap_handler::IsThreadInWasm()) {
           trap_handler::ClearThreadInWasm();
@@ -1242,6 +1251,7 @@ Object* Isolate::UnwindAndFindHandler() {
         return FoundHandler(nullptr, frame->LookupCode(), offset, return_sp,
                             frame->fp());
       }
+#endif
 
       case StackFrame::OPTIMIZED: {
         // For optimized frames we perform a lookup in the handler table.
@@ -1336,7 +1346,7 @@ Object* Isolate::UnwindAndFindHandler() {
                        nullptr, nullptr));
         }
         break;
-
+#ifdef ENABLE_WASM
       case StackFrame::WASM_INTERPRETER_ENTRY: {
         if (trap_handler::IsThreadInWasm()) {
           trap_handler::ClearThreadInWasm();
@@ -1346,6 +1356,7 @@ Object* Isolate::UnwindAndFindHandler() {
         // TODO(wasm): Implement try-catch in the interpreter.
         interpreter_frame->wasm_instance()->debug_info()->Unwind(frame->fp());
       } break;
+#endif
 
       default:
         // All other types can not handle exception.
@@ -1623,6 +1634,7 @@ bool Isolate::ComputeLocationFromStackTrace(MessageLocation* target,
 
   const int frame_count = elements->FrameCount();
   for (int i = 0; i < frame_count; i++) {
+#ifdef ENABLE_WASM
     if (elements->IsWasmFrame(i) || elements->IsAsmJsWasmFrame(i)) {
       Handle<WasmCompiledModule> compiled_module(
           WasmInstanceObject::cast(elements->WasmInstance(i))
@@ -1650,6 +1662,7 @@ bool Isolate::ComputeLocationFromStackTrace(MessageLocation* target,
       *target = MessageLocation(script, pos, pos + 1);
       return true;
     }
+#endif
 
     Handle<JSFunction> fun = handle(elements->Function(i), this);
     if (!fun->shared()->IsSubjectToDebugging()) continue;

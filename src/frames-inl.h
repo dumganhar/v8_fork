@@ -252,6 +252,7 @@ inline ArgumentsAdaptorFrame::ArgumentsAdaptorFrame(
 inline BuiltinFrame::BuiltinFrame(StackFrameIteratorBase* iterator)
     : JavaScriptFrame(iterator) {}
 
+#ifdef ENABLE_WASM
 inline WasmCompiledFrame::WasmCompiledFrame(StackFrameIteratorBase* iterator)
     : StandardFrame(iterator) {}
 
@@ -264,6 +265,8 @@ inline WasmToJsFrame::WasmToJsFrame(StackFrameIteratorBase* iterator)
 
 inline JsToWasmFrame::JsToWasmFrame(StackFrameIteratorBase* iterator)
     : StubFrame(iterator) {}
+
+#endif
 
 inline InternalFrame::InternalFrame(StackFrameIteratorBase* iterator)
     : StandardFrame(iterator) {

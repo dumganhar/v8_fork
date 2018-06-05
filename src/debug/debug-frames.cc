@@ -5,8 +5,11 @@
 #include "src/debug/debug-frames.h"
 
 #include "src/frames-inl.h"
+
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-interpreter.h"
 #include "src/wasm/wasm-objects.h"
+#endif
 
 namespace v8 {
 namespace internal {
@@ -36,7 +39,9 @@ FrameInspector::FrameInspector(StandardFrame* frame, int inlined_frame_index,
 
     deoptimized_frame_.reset(Deoptimizer::DebuggerInspectableFrame(
         js_frame, inlined_frame_index, isolate));
-  } else if (frame_->is_wasm_interpreter_entry()) {
+  } 
+#ifdef ENABLE_WASM
+  else if (frame_->is_wasm_interpreter_entry()) {
     wasm_interpreted_frame_ =
         frame_summary_.AsWasm()
             .wasm_instance()
@@ -44,6 +49,7 @@ FrameInspector::FrameInspector(StandardFrame* frame, int inlined_frame_index,
             ->GetInterpretedFrame(frame_->fp(), inlined_frame_index);
     DCHECK(wasm_interpreted_frame_);
   }
+#endif
 }
 
 FrameInspector::~FrameInspector() {
@@ -53,8 +59,10 @@ FrameInspector::~FrameInspector() {
 
 int FrameInspector::GetParametersCount() {
   if (is_optimized_) return deoptimized_frame_->parameters_count();
+#ifdef ENABLE_WASM
   if (wasm_interpreted_frame_)
     return wasm_interpreted_frame_->GetParameterCount();
+#endif
   return frame_->ComputeParametersCount();
 }
 

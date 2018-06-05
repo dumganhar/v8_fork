@@ -17,10 +17,15 @@
 #include "src/runtime-profiler.h"
 #include "src/snapshot/code-serializer.h"
 #include "src/snapshot/natives.h"
+
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
 #include "src/wasm/wasm-objects.h"
+#endif
 
 namespace {
+
+#ifdef ENABLE_WASM
 struct WasmCompileControls {
   uint32_t MaxWasmBufferSize = std::numeric_limits<uint32_t>::max();
   bool AllowAnySizeForAsync = true;
@@ -124,8 +129,9 @@ bool GetWasmFromArray(const v8::FunctionCallbackInfo<v8::Value>& args) {
   return true;
 }
 
-bool NoExtension(const v8::FunctionCallbackInfo<v8::Value>&) { return false; }
 
+bool NoExtension(const v8::FunctionCallbackInfo<v8::Value>&) { return false; }
+#endif // #ifdef ENABLE_WASM
 }  // namespace
 
 namespace v8 {
@@ -473,6 +479,8 @@ RUNTIME_FUNCTION(Runtime_ClearFunctionFeedback) {
   return isolate->heap()->undefined_value();
 }
 
+#ifdef ENABLE_WASM
+
 RUNTIME_FUNCTION(Runtime_SetWasmCompileFromPromiseOverload) {
   isolate->set_wasm_compile_callback(GetWasmFromArray);
   return isolate->heap()->undefined_value();
@@ -568,6 +576,8 @@ RUNTIME_FUNCTION(Runtime_SetWasmInstantiateControls) {
   v8_isolate->SetWasmInstantiateCallback(WasmInstantiateOverride);
   return isolate->heap()->undefined_value();
 }
+
+#endif // #ifdef ENABLE_WASM
 
 RUNTIME_FUNCTION(Runtime_NotifyContextDisposed) {
   HandleScope scope(isolate);
@@ -815,6 +825,8 @@ RUNTIME_FUNCTION(Runtime_InNewSpace) {
   return isolate->heap()->ToBoolean(isolate->heap()->InNewSpace(obj));
 }
 
+#ifdef ENABLE_WASM
+
 RUNTIME_FUNCTION(Runtime_IsAsmWasmCode) {
   SealHandleScope shs(isolate);
   DCHECK_EQ(1, args.length());
@@ -831,6 +843,8 @@ RUNTIME_FUNCTION(Runtime_IsAsmWasmCode) {
   return isolate->heap()->true_value();
 }
 
+#endif
+
 namespace {
 bool DisallowCodegenFromStringsCallback(v8::Local<v8::Context> context) {
   return false;
@@ -846,6 +860,7 @@ RUNTIME_FUNCTION(Runtime_DisallowCodegenFromStrings) {
   return isolate->heap()->undefined_value();
 }
 
+#ifdef ENABLE_WASM
 RUNTIME_FUNCTION(Runtime_IsWasmCode) {
   SealHandleScope shs(isolate);
   DCHECK_EQ(1, args.length());
@@ -853,6 +868,7 @@ RUNTIME_FUNCTION(Runtime_IsWasmCode) {
   bool is_js_to_wasm = function->code()->kind() == Code::JS_TO_WASM_FUNCTION;
   return isolate->heap()->ToBoolean(is_js_to_wasm);
 }
+#endif
 
 #define ELEMENTS_KIND_CHECK_RUNTIME_FUNCTION(Name)       \
   RUNTIME_FUNCTION(Runtime_Has##Name) {                  \
@@ -895,6 +911,7 @@ RUNTIME_FUNCTION(Runtime_SpeciesProtector) {
   CHECK(Type::Is##Type(args[index]));                   \
   Handle<Type> name = args.at<Type>(index);
 
+#ifdef ENABLE_WASM
 // Take a compiled wasm module, serialize it and copy the buffer into an array
 // buffer, which is then returned.
 RUNTIME_FUNCTION(Runtime_SerializeWasmModule) {
@@ -974,6 +991,7 @@ RUNTIME_FUNCTION(Runtime_ValidateWasmOrphanedInstance) {
   wasm::testing::ValidateOrphanedInstance(isolate, instance);
   return isolate->heap()->ToBoolean(true);
 }
+#endif // #ifdef ENABLE_WASM
 
 RUNTIME_FUNCTION(Runtime_HeapObjectVerify) {
   HandleScope shs(isolate);
@@ -991,6 +1009,8 @@ RUNTIME_FUNCTION(Runtime_HeapObjectVerify) {
 #endif
   return isolate->heap()->ToBoolean(true);
 }
+
+#ifdef ENABLE_WASM
 
 RUNTIME_FUNCTION(Runtime_WasmNumInterpretedCalls) {
   DCHECK_EQ(1, args.length());
@@ -1018,6 +1038,7 @@ RUNTIME_FUNCTION(Runtime_RedirectToWasmInterpreter) {
                                        Vector<int>(&function_index, 1));
   return isolate->heap()->undefined_value();
 }
+#endif // #ifdef ENABLE_WASM
 
 }  // namespace internal
 }  // namespace v8

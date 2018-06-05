@@ -62,7 +62,11 @@ void ReleaseHandlerData(int index);
 #endif
 
 inline bool UseTrapHandler() {
+#ifdef ENABLE_WASM
   return FLAG_wasm_trap_handler && V8_TRAP_HANDLER_SUPPORTED;
+#else
+  return false;
+#endif
 }
 
 extern THREAD_LOCAL bool g_thread_in_wasm_code;

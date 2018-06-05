@@ -55,6 +55,7 @@ class CodeSerializer : public Serializer {
   DISALLOW_COPY_AND_ASSIGN(CodeSerializer);
 };
 
+#ifdef ENABLE_WASM
 class WasmCompiledModuleSerializer : public CodeSerializer {
  public:
   static std::unique_ptr<ScriptData> SerializeWasmModule(
@@ -73,6 +74,7 @@ class WasmCompiledModuleSerializer : public CodeSerializer {
                                Handle<SeqOneByteString> module_bytes);
   DISALLOW_COPY_AND_ASSIGN(WasmCompiledModuleSerializer);
 };
+#endif
 
 // Wrapper around ScriptData to provide code-serializer-specific functionality.
 class SerializedCodeData : public SerializedData {

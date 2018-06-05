@@ -17,7 +17,9 @@
 #include "src/messages.h"
 #include "src/parsing/parse-info.h"
 #include "src/parsing/parsing.h"
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
+#endif
 
 namespace v8 {
 namespace internal {

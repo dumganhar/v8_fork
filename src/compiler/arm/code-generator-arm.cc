@@ -2669,10 +2669,12 @@ void CodeGenerator::AssembleArchTrap(Instruction* instr,
         // Therefore we emit a call to C here instead of a call to the runtime.
         // We use the context register as the scratch register, because we do
         // not have a context here.
+        assert(false);
         __ PrepareCallCFunction(0, 0, cp);
         __ CallCFunction(
             ExternalReference::wasm_call_trap_callback_for_testing(isolate()),
-            0);
+              0);
+
         __ LeaveFrame(StackFrame::WASM_COMPILED);
         __ Ret();
       } else {
@@ -2826,6 +2828,7 @@ void CodeGenerator::AssembleConstructFrame() {
 
   const RegList saves_fp = descriptor->CalleeSavedFPRegisters();
   if (shrink_slots > 0) {
+#ifdef ENABLE_WASM
     if (info()->IsWasm()) {
       if (shrink_slots > 128) {
         // For WebAssembly functions with big frames we have to do the stack
@@ -2867,6 +2870,7 @@ void CodeGenerator::AssembleConstructFrame() {
         __ bind(&done);
       }
     }
+#endif // #ifdef ENABLE_WASM
     __ sub(sp, sp, Operand(shrink_slots * kPointerSize));
   }
 
@@ -2969,9 +2973,12 @@ void CodeGenerator::AssembleMove(InstructionOperand* source,
           destination->IsRegister() ? g.ToRegister(destination) : kScratchReg;
       switch (src.type()) {
         case Constant::kInt32:
+#ifdef ENABLE_WASM
           if (RelocInfo::IsWasmReference(src.rmode())) {
             __ mov(dst, Operand(src.ToInt32(), src.rmode()));
-          } else {
+          } else 
+#endif
+          {
             __ mov(dst, Operand(src.ToInt32()));
           }
           break;

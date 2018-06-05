@@ -69,8 +69,14 @@
 #include "src/string-search.h"
 #include "src/string-stream.h"
 #include "src/utils.h"
+
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
 #include "src/wasm/wasm-objects.h"
+#endif
+
+#include "src/trap-handler/trap-handler.h"
+
 #include "src/zone/zone.h"
 
 #ifdef ENABLE_DISASSEMBLER
@@ -13174,6 +13180,7 @@ bool Script::GetPositionInfo(int position, PositionInfo* info,
                              OffsetFlag offset_flag) const {
   DisallowHeapAllocation no_allocation;
 
+#ifdef ENABLE_WASM
   // For wasm, we do not rely on the line_ends array, but do the translation
   // directly.
   if (type() == Script::TYPE_WASM) {
@@ -13183,6 +13190,7 @@ bool Script::GetPositionInfo(int position, PositionInfo* info,
     return compiled_module->GetPositionInfo(static_cast<uint32_t>(position),
                                             info);
   }
+#endif
 
   if (line_ends()->IsUndefined(GetIsolate())) {
     // Slow mode: we do not have line_ends. We have to iterate through source.

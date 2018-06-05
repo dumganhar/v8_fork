@@ -241,7 +241,9 @@ void V8InspectorImpl::resetContextGroup(int contextGroupId) {
   SessionMap::iterator session = m_sessions.find(contextGroupId);
   if (session != m_sessions.end()) session->second->reset();
   m_contexts.erase(contextGroupId);
+#ifdef ENABLE_WASM
   m_debugger->wasmTranslation()->Clear();
+#endif
 }
 
 void V8InspectorImpl::idleStarted() {

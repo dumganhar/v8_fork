@@ -64,6 +64,7 @@ static const intptr_t kBreakpointHintMaxSearchOffset = 80 * 10;
 
 namespace {
 
+#ifdef ENABLE_WASM
 void TranslateWasmStackTraceLocations(Array<CallFrame>* stackTrace,
                                       WasmTranslation* wasmTranslation) {
   for (size_t i = 0, e = stackTrace->length(); i != e; ++i) {
@@ -82,6 +83,7 @@ void TranslateWasmStackTraceLocations(Array<CallFrame>* stackTrace,
     location->setColumnNumber(columnNumber);
   }
 }
+#endif
 
 String16 breakpointIdSuffix(V8DebuggerAgentImpl::BreakpointSource source) {
   switch (source) {
@@ -547,19 +549,22 @@ V8DebuggerAgentImpl::resolveBreakpoint(const String16& breakpointId,
   ScriptBreakpoint translatedBreakpoint = breakpoint;
   adjustBreakpointLocation(*scriptIterator->second, hint,
                            &translatedBreakpoint);
+#ifdef ENABLE_WASM
   m_debugger->wasmTranslation()->TranslateProtocolLocationToWasmScriptLocation(
       &translatedBreakpoint.script_id, &translatedBreakpoint.line_number,
       &translatedBreakpoint.column_number);
-
+#endif
   int actualLineNumber;
   int actualColumnNumber;
   String16 debuggerBreakpointId = m_debugger->setBreakpoint(
       translatedBreakpoint, &actualLineNumber, &actualColumnNumber);
   if (debuggerBreakpointId.isEmpty()) return nullptr;
 
+#ifdef ENABLE_WASM
   // Translate back from v8 location to protocol location for the return value.
   m_debugger->wasmTranslation()->TranslateWasmScriptLocationToProtocolLocation(
       &translatedBreakpoint.script_id, &actualLineNumber, &actualColumnNumber);
+#endif
 
   m_serverBreakpoints[debuggerBreakpointId] =
       std::make_pair(breakpointId, source);
@@ -1019,8 +1024,10 @@ Response V8DebuggerAgentImpl::currentCallFrames(
   protocol::ErrorSupport errorSupport;
   *result = Array<CallFrame>::fromValue(protocolValue.get(), &errorSupport);
   if (!*result) return Response::Error(errorSupport.errors());
+#ifdef ENABLE_WASM
   TranslateWasmStackTraceLocations(result->get(),
                                    m_debugger->wasmTranslation());
+#endif
   return Response::OK();
 }
 

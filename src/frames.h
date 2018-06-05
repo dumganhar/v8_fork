@@ -39,7 +39,10 @@ class Isolate;
 class RootVisitor;
 class StackFrameIteratorBase;
 class ThreadLocalTop;
+
+#ifdef ENABLE_WASM
 class WasmInstanceObject;
+#endif
 
 class InnerPointerToCodeCache {
  public:
@@ -104,10 +107,6 @@ class StackHandler BASE_EMBEDDED {
   V(EXIT, ExitFrame)                                     \
   V(JAVA_SCRIPT, JavaScriptFrame)                        \
   V(OPTIMIZED, OptimizedFrame)                           \
-  V(WASM_COMPILED, WasmCompiledFrame)                    \
-  V(WASM_TO_JS, WasmToJsFrame)                           \
-  V(JS_TO_WASM, JsToWasmFrame)                           \
-  V(WASM_INTERPRETER_ENTRY, WasmInterpreterEntryFrame)   \
   V(INTERPRETED, InterpretedFrame)                       \
   V(STUB, StubFrame)                                     \
   V(STUB_FAILURE_TRAMPOLINE, StubFailureTrampolineFrame) \
@@ -116,6 +115,15 @@ class StackHandler BASE_EMBEDDED {
   V(ARGUMENTS_ADAPTOR, ArgumentsAdaptorFrame)            \
   V(BUILTIN, BuiltinFrame)                               \
   V(BUILTIN_EXIT, BuiltinExitFrame)
+
+
+#ifdef ENABLE_WASM
+  V(WASM_COMPILED, WasmCompiledFrame)                    \
+  V(WASM_TO_JS, WasmToJsFrame)                           \
+  V(JS_TO_WASM, JsToWasmFrame)                           \
+  V(WASM_INTERPRETER_ENTRY, WasmInterpreterEntryFrame)   \
+
+#endif
 
 // Every pointer in a frame has a slot id. On 32-bit platforms, doubles consume
 // two slots.
@@ -513,12 +521,19 @@ class StackFrame BASE_EMBEDDED {
   bool is_exit() const { return type() == EXIT; }
   bool is_optimized() const { return type() == OPTIMIZED; }
   bool is_interpreted() const { return type() == INTERPRETED; }
+#ifdef ENABLE_WASM
   bool is_wasm_compiled() const { return type() == WASM_COMPILED; }
   bool is_wasm_to_js() const { return type() == WASM_TO_JS; }
   bool is_js_to_wasm() const { return type() == JS_TO_WASM; }
   bool is_wasm_interpreter_entry() const {
     return type() == WASM_INTERPRETER_ENTRY;
   }
+#else
+  bool is_wasm_compiled() const { return false; }
+  bool is_wasm_to_js() const { return false; }
+  bool is_js_to_wasm() const { return false; }
+  bool is_wasm_interpreter_entry() const { return false; }
+#endif
   bool is_arguments_adaptor() const { return type() == ARGUMENTS_ADAPTOR; }
   bool is_builtin() const { return type() == BUILTIN; }
   bool is_internal() const { return type() == INTERNAL; }
@@ -535,8 +550,12 @@ class StackFrame BASE_EMBEDDED {
            (type == INTERPRETED) || (type == BUILTIN);
   }
   bool is_wasm() const {
+#ifdef ENABLE_WASM
     Type type = this->type();
     return type == WASM_COMPILED || type == WASM_INTERPRETER_ENTRY;
+#else
+    return false;
+#endif
   }
 
   // Accessors.
@@ -799,11 +818,14 @@ class FrameSummary BASE_EMBEDDED {
 
 // Subclasses for the different summary kinds:
 #define FRAME_SUMMARY_VARIANTS(F)                                             \
-  F(JAVA_SCRIPT, JavaScriptFrameSummary, java_script_summary_, JavaScript)    \
+  F(JAVA_SCRIPT, JavaScriptFrameSummary, java_script_summary_, JavaScript)    
+
+#ifdef ENABLE_WASM
   F(WASM_COMPILED, WasmCompiledFrameSummary, wasm_compiled_summary_,          \
     WasmCompiled)                                                             \
   F(WASM_INTERPRETED, WasmInterpretedFrameSummary, wasm_interpreted_summary_, \
     WasmInterpreted)
+#endif
 
 #define FRAME_SUMMARY_KIND(kind, type, field, desc) kind,
   enum Kind { FRAME_SUMMARY_VARIANTS(FRAME_SUMMARY_KIND) };
@@ -848,6 +870,7 @@ class FrameSummary BASE_EMBEDDED {
     bool is_constructor_;
   };
 
+#ifdef ENABLE_WASM
   class WasmFrameSummary : public FrameSummaryBase {
    protected:
     WasmFrameSummary(Isolate*, Kind, Handle<WasmInstanceObject>,
@@ -898,6 +921,7 @@ class FrameSummary BASE_EMBEDDED {
     uint32_t function_index_;
     int byte_offset_;
   };
+#endif // #ifdef ENABLE_WASM
 
 #undef FRAME_SUMMARY_FIELD
 #define FRAME_SUMMARY_CONS(kind, type, field, desc) \
@@ -932,11 +956,20 @@ class FrameSummary BASE_EMBEDDED {
   FRAME_SUMMARY_VARIANTS(FRAME_SUMMARY_CAST)
 #undef FRAME_SUMMARY_CAST
 
-  bool IsWasm() const { return IsWasmCompiled() || IsWasmInterpreted(); }
+  bool IsWasm() const { 
+#ifdef ENABLE_WASM
+    return IsWasmCompiled() || IsWasmInterpreted();
+#else
+    return false;
+#endif
+  }
+
+#ifdef ENABLE_WASM
   const WasmFrameSummary& AsWasm() const {
     if (IsWasmCompiled()) return AsWasmCompiled();
     return AsWasmInterpreted();
   }
+#endif
 
  private:
 #define FRAME_SUMMARY_FIELD(kind, type, field, desc) type field;
@@ -1289,6 +1322,8 @@ class BuiltinFrame final : public JavaScriptFrame {
   friend class StackFrameIteratorBase;
 };
 
+#ifdef ENABLE_WASM
+
 class WasmCompiledFrame final : public StandardFrame {
  public:
   Type type() const override { return WASM_COMPILED; }
@@ -1390,6 +1425,8 @@ class JsToWasmFrame : public StubFrame {
  private:
   friend class StackFrameIteratorBase;
 };
+
+#endif // #ifdef ENABLE_WASM
 
 class InternalFrame: public StandardFrame {
  public:

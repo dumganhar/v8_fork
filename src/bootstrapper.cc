@@ -21,7 +21,9 @@
 #include "src/isolate-inl.h"
 #include "src/snapshot/natives.h"
 #include "src/snapshot/snapshot.h"
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-js.h"
+#endif
 
 #if V8_INTL_SUPPORT
 #include "src/objects/intl-objects.h"
@@ -2470,6 +2472,7 @@ void Genesis::InitializeGlobal(Handle<JSGlobalObject> global_object,
                      Context::MAKE_URI_ERROR_INDEX);
   }
 
+#ifdef ENABLE_WASM
   {  // -- C o m p i l e E r r o r
     Handle<JSObject> dummy = factory->NewJSObject(isolate->object_function());
     InstallError(isolate, dummy, factory->CompileError_string(),
@@ -2483,6 +2486,7 @@ void Genesis::InitializeGlobal(Handle<JSGlobalObject> global_object,
     InstallError(isolate, dummy, factory->RuntimeError_string(),
                  Context::WASM_RUNTIME_ERROR_FUNCTION_INDEX);
   }
+#endif
 
   // Initialize the embedder data slot.
   Handle<FixedArray> embedder_data = factory->NewFixedArray(3);
@@ -4683,9 +4687,11 @@ bool Genesis::InstallSpecialObjects(Handle<Context> native_context) {
   Handle<Smi> stack_trace_limit(Smi::FromInt(FLAG_stack_trace_limit), isolate);
   JSObject::AddProperty(Error, name, stack_trace_limit, NONE);
 
+#ifdef ENABLE_WASM
   if (FLAG_expose_wasm || FLAG_validate_asm) {
     WasmJs::Install(isolate);
   }
+#endif
 
   InstallFFIMap(isolate);
 

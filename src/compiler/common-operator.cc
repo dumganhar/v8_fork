@@ -642,11 +642,14 @@ struct CommonOperatorGlobalCache final {
               1, 1, 1, 0, 0, 1,                          // counts
               trap_id) {}                                // parameter
   };
+
+#ifdef ENABLE_WASM
 #define CACHED_TRAP_IF(Trap)                                       \
   TrapIfOperator<static_cast<int32_t>(Builtins::kThrowWasm##Trap)> \
       kTrapIf##Trap##Operator;
   CACHED_TRAP_IF_LIST(CACHED_TRAP_IF)
 #undef CACHED_TRAP_IF
+#endif
 
   template <int32_t trap_id>
   struct TrapUnlessOperator final : public Operator1<int32_t> {
@@ -658,11 +661,14 @@ struct CommonOperatorGlobalCache final {
               1, 1, 1, 0, 0, 1,                          // counts
               trap_id) {}                                // parameter
   };
+
+#ifdef ENABLE_WASM
 #define CACHED_TRAP_UNLESS(Trap)                                       \
   TrapUnlessOperator<static_cast<int32_t>(Builtins::kThrowWasm##Trap)> \
       kTrapUnless##Trap##Operator;
   CACHED_TRAP_UNLESS_LIST(CACHED_TRAP_UNLESS)
 #undef CACHED_TRAP_UNLESS
+#endif
 
   template <MachineRepresentation kRep, int kInputCount>
   struct PhiOperator final : public Operator1<MachineRepresentation> {
@@ -864,11 +870,13 @@ const Operator* CommonOperatorBuilder::DeoptimizeUnless(
 
 const Operator* CommonOperatorBuilder::TrapIf(int32_t trap_id) {
   switch (trap_id) {
+#ifdef ENABLE_WASM
 #define CACHED_TRAP_IF(Trap)       \
   case Builtins::kThrowWasm##Trap: \
     return &cache_.kTrapIf##Trap##Operator;
     CACHED_TRAP_IF_LIST(CACHED_TRAP_IF)
 #undef CACHED_TRAP_IF
+#endif
     default:
       break;
   }
@@ -883,11 +891,13 @@ const Operator* CommonOperatorBuilder::TrapIf(int32_t trap_id) {
 
 const Operator* CommonOperatorBuilder::TrapUnless(int32_t trap_id) {
   switch (trap_id) {
+#ifdef ENABLE_WASM
 #define CACHED_TRAP_UNLESS(Trap)   \
   case Builtins::kThrowWasm##Trap: \
     return &cache_.kTrapUnless##Trap##Operator;
     CACHED_TRAP_UNLESS_LIST(CACHED_TRAP_UNLESS)
 #undef CACHED_TRAP_UNLESS
+#endif
     default:
       break;
   }

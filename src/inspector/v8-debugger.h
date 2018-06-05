@@ -15,8 +15,9 @@
 #include "src/inspector/protocol/Forward.h"
 #include "src/inspector/protocol/Runtime.h"
 #include "src/inspector/v8-debugger-script.h"
+#ifdef ENABLE_WASM
 #include "src/inspector/wasm-translation.h"
-
+#endif
 #include "include/v8-inspector.h"
 
 namespace v8_inspector {
@@ -110,7 +111,9 @@ class V8Debugger : public v8::debug::DebugDelegate {
 
   V8InspectorImpl* inspector() { return m_inspector; }
 
+#ifdef ENABLE_WASM
   WasmTranslation* wasmTranslation() { return &m_wasmTranslation; }
+#endif
 
   void setMaxAsyncTaskStacksForTest(int limit);
   void dumpAsyncTaskStacksStateForTest();
@@ -223,8 +226,9 @@ class V8Debugger : public v8::debug::DebugDelegate {
 
   v8::debug::ExceptionBreakState m_pauseOnExceptionsState;
 
+#ifdef ENABLE_WASM
   WasmTranslation m_wasmTranslation;
-
+#endif
   DISALLOW_COPY_AND_ASSIGN(V8Debugger);
 };
 

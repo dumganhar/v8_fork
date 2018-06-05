@@ -18,8 +18,11 @@
 #include "src/interpreter/interpreter.h"
 #include "src/isolate-inl.h"
 #include "src/runtime/runtime.h"
+
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
 #include "src/wasm/wasm-objects.h"
+#endif
 
 namespace v8 {
 namespace internal {
@@ -514,6 +517,7 @@ RUNTIME_FUNCTION(Runtime_GetFrameDetails) {
   Handle<Object> frame_id(DebugFrameHelper::WrapFrameId(it.frame()->id()),
                           isolate);
 
+#ifdef ENABLE_WASM
   if (frame_inspector.summary().IsWasm()) {
     // Create the details array (no dynamic information for wasm).
     Handle<FixedArray> details =
@@ -559,6 +563,7 @@ RUNTIME_FUNCTION(Runtime_GetFrameDetails) {
 
     return *isolate->factory()->NewJSArrayWithElements(details);
   }
+#endif
 
   // Find source position in unoptimized code.
   int position = frame_inspector.GetSourcePosition();
@@ -843,6 +848,7 @@ RUNTIME_FUNCTION(Runtime_GetAllScopesDetails) {
   StackTraceFrameIterator frame_it(isolate, id);
   StandardFrame* frame = frame_it.frame();
 
+#ifdef ENABLE_WASM
   // Handle wasm frames specially. They provide exactly two scopes (global /
   // local).
   if (frame->is_wasm_interpreter_entry()) {
@@ -852,6 +858,7 @@ RUNTIME_FUNCTION(Runtime_GetAllScopesDetails) {
     return *WasmDebugInfo::GetScopeDetails(debug_info, frame->fp(),
                                            inlined_frame_index);
   }
+#endif
 
   FrameInspector frame_inspector(frame, inlined_frame_index, isolate);
   List<Handle<JSObject>> result(4);
@@ -1553,10 +1560,12 @@ namespace {
 int ScriptLinePosition(Handle<Script> script, int line) {
   if (line < 0) return -1;
 
+#ifdef ENABLE_WASM
   if (script->type() == Script::TYPE_WASM) {
     return WasmCompiledModule::cast(script->wasm_compiled_module())
         ->GetFunctionOffset(line);
   }
+#endif
 
   Script::InitLineEnds(script);
 

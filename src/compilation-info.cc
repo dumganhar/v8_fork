@@ -177,6 +177,7 @@ StackFrame::Type CompilationInfo::GetOutputStackFrameType() const {
       IC_KIND_LIST(CASE_KIND)
 #undef CASE_KIND
       return StackFrame::STUB;
+#ifdef ENABLE_WASM
     case Code::WASM_FUNCTION:
       return StackFrame::WASM_COMPILED;
     case Code::JS_TO_WASM_FUNCTION:
@@ -185,6 +186,7 @@ StackFrame::Type CompilationInfo::GetOutputStackFrameType() const {
       return StackFrame::WASM_TO_JS;
     case Code::WASM_INTERPRETER_ENTRY:
       return StackFrame::WASM_INTERPRETER_ENTRY;
+#endif
     default:
       UNIMPLEMENTED();
       return StackFrame::NONE;

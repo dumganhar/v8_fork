@@ -17,9 +17,12 @@
 #include "src/objects.h"
 #include "src/snapshot/code-serializer.h"
 #include "src/transitions.h"
+
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
 #include "src/wasm/wasm-objects.h"
 #include "src/wasm/wasm-result.h"
+#endif
 
 namespace v8 {
 namespace internal {
@@ -450,11 +453,14 @@ Maybe<bool> ValueSerializer::WriteJSReceiver(Handle<JSReceiver> receiver) {
     case JS_API_OBJECT_TYPE: {
       Handle<JSObject> js_object = Handle<JSObject>::cast(receiver);
       Map* map = js_object->map();
+#ifdef ENABLE_WASM
       if (!FLAG_wasm_disable_structured_cloning &&
           map->GetConstructor() ==
               isolate_->native_context()->wasm_module_constructor()) {
         return WriteWasmModule(js_object);
-      } else if (JSObject::GetEmbedderFieldCount(map)) {
+      } else 
+#endif
+      if (JSObject::GetEmbedderFieldCount(map)) {
         return WriteHostObject(js_object);
       } else {
         return WriteJSObject(js_object);
@@ -815,6 +821,7 @@ Maybe<bool> ValueSerializer::WriteJSArrayBufferView(JSArrayBufferView* view) {
   return ThrowIfOutOfMemory();
 }
 
+#ifdef ENABLE_WASM
 Maybe<bool> ValueSerializer::WriteWasmModule(Handle<JSObject> object) {
   if (delegate_ != nullptr) {
     Maybe<uint32_t> transfer_id = delegate_->GetWasmModuleTransferId(
@@ -852,6 +859,7 @@ Maybe<bool> ValueSerializer::WriteWasmModule(Handle<JSObject> object) {
 
   return ThrowIfOutOfMemory();
 }
+#endif
 
 Maybe<bool> ValueSerializer::WriteHostObject(Handle<JSObject> object) {
   WriteTag(SerializationTag::kHostObject);
@@ -1173,10 +1181,12 @@ MaybeHandle<Object> ValueDeserializer::ReadObjectInternal() {
       const bool is_shared = true;
       return ReadTransferredJSArrayBuffer(is_shared);
     }
+#ifdef ENABLE_WASM
     case SerializationTag::kWasmModule:
       return ReadWasmModule();
     case SerializationTag::kWasmModuleTransfer:
       return ReadWasmModuleTransfer();
+#endif
     case SerializationTag::kHostObject:
       return ReadHostObject();
     default:
@@ -1639,6 +1649,7 @@ MaybeHandle<JSArrayBufferView> ValueDeserializer::ReadJSArrayBufferView(
   return typed_array;
 }
 
+#ifdef ENABLE_WASM
 MaybeHandle<JSObject> ValueDeserializer::ReadWasmModuleTransfer() {
   if (FLAG_wasm_disable_structured_cloning || expect_inline_wasm()) {
     return MaybeHandle<JSObject>();
@@ -1711,6 +1722,7 @@ MaybeHandle<JSObject> ValueDeserializer::ReadWasmModule() {
   }
   return result;
 }
+#endif // #ifdef ENABLE_WASM
 
 MaybeHandle<JSObject> ValueDeserializer::ReadHostObject() {
   if (!delegate_) return MaybeHandle<JSObject>();

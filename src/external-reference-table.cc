@@ -186,6 +186,7 @@ void ExternalReferenceTable::AddReferences(Isolate* isolate) {
       "InvokeFunctionCallback");
   Add(ExternalReference::invoke_accessor_getter_callback(isolate).address(),
       "InvokeAccessorGetterCallback");
+#ifdef ENABLE_WASM
   Add(ExternalReference::wasm_f32_trunc(isolate).address(),
       "wasm::f32_trunc_wrapper");
   Add(ExternalReference::wasm_f32_floor(isolate).address(),
@@ -234,14 +235,17 @@ void ExternalReferenceTable::AddReferences(Isolate* isolate) {
       "wasm::word32_popcnt");
   Add(ExternalReference::wasm_word64_popcnt(isolate).address(),
       "wasm::word64_popcnt");
+#endif
   Add(ExternalReference::f64_acos_wrapper_function(isolate).address(),
       "f64_acos_wrapper");
   Add(ExternalReference::f64_asin_wrapper_function(isolate).address(),
       "f64_asin_wrapper");
   Add(ExternalReference::f64_mod_wrapper_function(isolate).address(),
       "f64_mod_wrapper");
+#ifdef ENABLE_WASM
   Add(ExternalReference::wasm_call_trap_callback_for_testing(isolate).address(),
       "wasm::call_trap_callback_for_testing");
+#endif
   Add(ExternalReference::libc_memchr_function(isolate).address(),
       "libc_memchr");
   Add(ExternalReference::libc_memcpy_function(isolate).address(),

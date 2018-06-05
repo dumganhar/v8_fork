@@ -148,7 +148,7 @@ namespace internal {
   ASM(CompileOptimized)                                                        \
   ASM(CompileOptimizedConcurrent)                                              \
   ASM(InOptimizationQueue)                                                     \
-  ASM(InstantiateAsmJs)                                                        \
+  /* cjh ASM(InstantiateAsmJs)  */                                                      \
   ASM(MarkCodeAsToBeExecutedOnce)                                              \
   ASM(MarkCodeAsExecutedOnce)                                                  \
   ASM(MarkCodeAsExecutedTwice)                                                 \
@@ -949,17 +949,17 @@ namespace internal {
   /* ES6 %TypedArray%.prototype.map */                                         \
   TFJ(TypedArrayPrototypeMap, SharedFunctionInfo::kDontAdaptArgumentsSentinel) \
                                                                                \
-  /* Wasm */                                                                   \
-  ASM(WasmCompileLazy)                                                         \
-  TFC(WasmStackGuard, WasmRuntimeCall, 1)                                      \
-  TFC(ThrowWasmTrapUnreachable, WasmRuntimeCall, 1)                            \
-  TFC(ThrowWasmTrapMemOutOfBounds, WasmRuntimeCall, 1)                         \
-  TFC(ThrowWasmTrapDivByZero, WasmRuntimeCall, 1)                              \
-  TFC(ThrowWasmTrapDivUnrepresentable, WasmRuntimeCall, 1)                     \
-  TFC(ThrowWasmTrapRemByZero, WasmRuntimeCall, 1)                              \
-  TFC(ThrowWasmTrapFloatUnrepresentable, WasmRuntimeCall, 1)                   \
-  TFC(ThrowWasmTrapFuncInvalid, WasmRuntimeCall, 1)                            \
-  TFC(ThrowWasmTrapFuncSigMismatch, WasmRuntimeCall, 1)                        \
+  /*cjh Wasm */                                                                   \
+  /* ASM(WasmCompileLazy)   */                                                       \
+  /* TFC(WasmStackGuard, WasmRuntimeCall, 1)   */                                    \
+  /* TFC(ThrowWasmTrapUnreachable, WasmRuntimeCall, 1)  */                           \
+  /* TFC(ThrowWasmTrapMemOutOfBounds, WasmRuntimeCall, 1)   */                       \
+  /* TFC(ThrowWasmTrapDivByZero, WasmRuntimeCall, 1)     */                          \
+  /* TFC(ThrowWasmTrapDivUnrepresentable, WasmRuntimeCall, 1)   */                   \
+  /* TFC(ThrowWasmTrapRemByZero, WasmRuntimeCall, 1)     */                          \
+  /* TFC(ThrowWasmTrapFloatUnrepresentable, WasmRuntimeCall, 1)    */                \
+  /* TFC(ThrowWasmTrapFuncInvalid, WasmRuntimeCall, 1)      */                       \
+  /* TFC(ThrowWasmTrapFuncSigMismatch, WasmRuntimeCall, 1)     */                    \
                                                                                \
   /* AsyncGenerator */                                                         \
                                                                                \
@@ -1058,7 +1058,9 @@ namespace internal {
   BUILTIN_LIST(IGNORE_BUILTIN, IGNORE_BUILTIN, IGNORE_BUILTIN, IGNORE_BUILTIN, \
                V, IGNORE_BUILTIN, IGNORE_BUILTIN, IGNORE_BUILTIN)
 
+#ifdef ENABLE_WASM
 #define BUILTINS_WITH_UNTAGGED_PARAMS(V) V(WasmCompileLazy)
+#endif
 
 }  // namespace internal
 }  // namespace v8

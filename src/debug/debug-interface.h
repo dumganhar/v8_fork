@@ -149,6 +149,7 @@ class V8_EXPORT_PRIVATE Script {
   v8::debug::Location GetSourceLocation(int offset) const;
 };
 
+#ifdef ENABLE_WASM
 // Specialization for wasm Scripts.
 class WasmScript : public Script {
  public:
@@ -161,6 +162,7 @@ class WasmScript : public Script {
 
   debug::WasmDisassembly DisassembleFunction(int function_index) const;
 };
+#endif
 
 void GetLoadedScripts(Isolate* isolate, PersistentValueVector<Script>& scripts);
 

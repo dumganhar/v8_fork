@@ -125,7 +125,9 @@ class ValueSerializer {
   Maybe<bool> WriteJSArrayBuffer(Handle<JSArrayBuffer> array_buffer)
       WARN_UNUSED_RESULT;
   Maybe<bool> WriteJSArrayBufferView(JSArrayBufferView* array_buffer);
+#ifdef ENABLE_WASM
   Maybe<bool> WriteWasmModule(Handle<JSObject> object) WARN_UNUSED_RESULT;
+#endif
   Maybe<bool> WriteHostObject(Handle<JSObject> object) WARN_UNUSED_RESULT;
 
   /*
@@ -267,8 +269,11 @@ class ValueDeserializer {
       WARN_UNUSED_RESULT;
   MaybeHandle<JSArrayBufferView> ReadJSArrayBufferView(
       Handle<JSArrayBuffer> buffer) WARN_UNUSED_RESULT;
+
+  #ifdef ENABLE_WASM
   MaybeHandle<JSObject> ReadWasmModule() WARN_UNUSED_RESULT;
   MaybeHandle<JSObject> ReadWasmModuleTransfer() WARN_UNUSED_RESULT;
+  #endif
   MaybeHandle<JSObject> ReadHostObject() WARN_UNUSED_RESULT;
 
   /*

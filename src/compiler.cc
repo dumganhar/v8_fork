@@ -7,7 +7,9 @@
 #include <algorithm>
 #include <memory>
 
+#ifdef ENABLE_ASMJS
 #include "src/asmjs/asm-js.h"
+#endif
 #include "src/assembler-inl.h"
 #include "src/ast/ast-numbering.h"
 #include "src/ast/prettyprinter.h"
@@ -355,6 +357,7 @@ bool ShouldUseIgnition(Handle<SharedFunctionInfo> shared,
   // underlying code to be based on the bytecode array.
   DCHECK(!IsResumableFunction(shared->kind()));
 
+#ifdef ENABLE_WASM
   // Skip Ignition for asm.js functions.
   if (shared->asm_function()) return false;
 
@@ -362,6 +365,7 @@ bool ShouldUseIgnition(Handle<SharedFunctionInfo> shared,
   if (FLAG_validate_asm && shared->HasAsmWasmData()) {
     return false;
   }
+#endif
 
   // Code destined for TurboFan should be compiled with Ignition first.
   if (UseTurboFan(shared)) return true;
@@ -377,6 +381,7 @@ bool ShouldUseIgnition(CompilationInfo* info) {
 
 bool UseAsmWasm(DeclarationScope* scope, Handle<SharedFunctionInfo> shared_info,
                 bool is_debug) {
+#ifdef ENABLE_WASM
   // Check whether asm.js validation is enabled.
   if (!FLAG_validate_asm) return false;
 
@@ -392,6 +397,9 @@ bool UseAsmWasm(DeclarationScope* scope, Handle<SharedFunctionInfo> shared_info,
 
   // In general, we respect the "use asm" directive.
   return scope->asm_module();
+#else
+  return false;
+#endif
 }
 
 bool UseCompilerDispatcher(Compiler::ConcurrencyMode inner_function_mode,
@@ -518,6 +526,7 @@ bool Renumber(ParseInfo* parse_info,
 }
 
 bool GenerateUnoptimizedCode(CompilationInfo* info) {
+#ifdef ENABLE_WASM
   if (UseAsmWasm(info->scope(), info->shared_info(), info->is_debug())) {
     EnsureFeedbackMetadata(info);
     MaybeHandle<FixedArray> wasm_data;
@@ -529,6 +538,7 @@ bool GenerateUnoptimizedCode(CompilationInfo* info) {
       return true;
     }
   }
+#endif
 
   std::unique_ptr<CompilationJob> job(GetUnoptimizedCompilationJob(info));
   if (job->PrepareJob() != CompilationJob::SUCCEEDED) return false;

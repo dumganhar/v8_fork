@@ -37,6 +37,7 @@ class Pipeline : public AllStatic {
   static CompilationJob* NewCompilationJob(Handle<JSFunction> function,
                                            bool has_script);
 
+#ifdef ENABLE_WASM
   // Returns a new compilation job for the WebAssembly compilation info.
   static CompilationJob* NewWasmCompilationJob(
       CompilationInfo* info, JSGraph* jsgraph, CallDescriptor* descriptor,
@@ -44,6 +45,7 @@ class Pipeline : public AllStatic {
       ZoneVector<trap_handler::ProtectedInstructionData>*
           protected_instructions,
       bool wasm_origin);
+#endif
 
   // Run the pipeline on a machine graph and generate code. The {schedule} must
   // be valid, hence the given {graph} does not need to be schedulable.

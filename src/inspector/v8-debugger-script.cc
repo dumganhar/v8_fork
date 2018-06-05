@@ -6,7 +6,10 @@
 
 #include "src/inspector/inspected-context.h"
 #include "src/inspector/string-util.h"
+
+#ifdef ENABLE_WASM
 #include "src/inspector/wasm-translation.h"
+#endif
 
 namespace v8_inspector {
 
@@ -82,6 +85,7 @@ String16 calculateHash(const String16& str) {
   return hash.toString();
 }
 
+#ifdef ENABLE_WASM
 void TranslateProtocolLocationToV8Location(WasmTranslation* wasmTranslation,
                                            v8::debug::Location* loc,
                                            const String16& scriptId,
@@ -107,6 +111,7 @@ void TranslateV8LocationToProtocolLocation(
   DCHECK_EQ(expectedProtocolScriptId.utf8(), translatedScriptId.utf8());
   *loc = v8::debug::Location(lineNumber, columnNumber);
 }
+#endif
 
 class ActualScript : public V8DebuggerScript {
   friend class V8DebuggerScript;
@@ -229,6 +234,7 @@ class ActualScript : public V8DebuggerScript {
   v8::Global<v8::debug::Script> m_script;
 };
 
+#ifdef ENABLE_WASM
 class WasmVirtualScript : public V8DebuggerScript {
   friend class V8DebuggerScript;
 
@@ -307,6 +313,7 @@ class WasmVirtualScript : public V8DebuggerScript {
   v8::Global<v8::debug::WasmScript> m_script;
   WasmTranslation* m_wasmTranslation;
 };
+#endif
 
 }  // namespace
 
@@ -317,6 +324,7 @@ std::unique_ptr<V8DebuggerScript> V8DebuggerScript::Create(
       new ActualScript(isolate, scriptObj, isLiveEdit));
 }
 
+#ifdef ENABLE_WASM
 std::unique_ptr<V8DebuggerScript> V8DebuggerScript::CreateWasm(
     v8::Isolate* isolate, WasmTranslation* wasmTranslation,
     v8::Local<v8::debug::WasmScript> underlyingScript, String16 id,
@@ -325,6 +333,7 @@ std::unique_ptr<V8DebuggerScript> V8DebuggerScript::CreateWasm(
       new WasmVirtualScript(isolate, wasmTranslation, underlyingScript,
                             std::move(id), std::move(url), std::move(source)));
 }
+#endif
 
 V8DebuggerScript::V8DebuggerScript(v8::Isolate* isolate, String16 id,
                                    String16 url)

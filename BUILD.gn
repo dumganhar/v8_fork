@@ -936,7 +936,6 @@ v8_source_set("v8_builtins_generators") {
     "src/builtins/builtins-symbol-gen.cc",
     "src/builtins/builtins-typedarray-gen.cc",
     "src/builtins/builtins-utils-gen.h",
-    "src/builtins/builtins-wasm-gen.cc",
     "src/builtins/setup-builtins-internal.cc",
     "src/ic/accessor-assembler.cc",
     "src/ic/accessor-assembler.h",
@@ -1083,17 +1082,6 @@ v8_source_set("v8_base") {
     "src/api.h",
     "src/arguments.cc",
     "src/arguments.h",
-    "src/asmjs/asm-js.cc",
-    "src/asmjs/asm-js.h",
-    "src/asmjs/asm-names.h",
-    "src/asmjs/asm-parser.cc",
-    "src/asmjs/asm-parser.h",
-    "src/asmjs/asm-scanner.cc",
-    "src/asmjs/asm-scanner.h",
-    "src/asmjs/asm-types.cc",
-    "src/asmjs/asm-types.h",
-    "src/asmjs/switch-logic.cc",
-    "src/asmjs/switch-logic.h",
     "src/assembler-inl.h",
     "src/assembler.cc",
     "src/assembler.h",
@@ -1412,9 +1400,6 @@ v8_source_set("v8_base") {
     "src/compiler/value-numbering-reducer.h",
     "src/compiler/verifier.cc",
     "src/compiler/verifier.h",
-    "src/compiler/wasm-compiler.cc",
-    "src/compiler/wasm-compiler.h",
-    "src/compiler/wasm-linkage.cc",
     "src/compiler/zone-stats.cc",
     "src/compiler/zone-stats.h",
     "src/contexts-inl.h",
@@ -1886,7 +1871,6 @@ v8_source_set("v8_base") {
     "src/runtime/runtime-test.cc",
     "src/runtime/runtime-typedarray.cc",
     "src/runtime/runtime-utils.h",
-    "src/runtime/runtime-wasm.cc",
     "src/runtime/runtime.cc",
     "src/runtime/runtime.h",
     "src/safepoint-table.cc",
@@ -1975,41 +1959,6 @@ v8_source_set("v8_base") {
     "src/visitors.h",
     "src/vm-state-inl.h",
     "src/vm-state.h",
-    "src/wasm/decoder.h",
-    "src/wasm/function-body-decoder-impl.h",
-    "src/wasm/function-body-decoder.cc",
-    "src/wasm/function-body-decoder.h",
-    "src/wasm/leb-helper.h",
-    "src/wasm/local-decl-encoder.cc",
-    "src/wasm/local-decl-encoder.h",
-    "src/wasm/module-decoder.cc",
-    "src/wasm/module-decoder.h",
-    "src/wasm/signature-map.cc",
-    "src/wasm/signature-map.h",
-    "src/wasm/streaming-decoder.cc",
-    "src/wasm/streaming-decoder.h",
-    "src/wasm/wasm-code-specialization.cc",
-    "src/wasm/wasm-code-specialization.h",
-    "src/wasm/wasm-debug.cc",
-    "src/wasm/wasm-external-refs.cc",
-    "src/wasm/wasm-external-refs.h",
-    "src/wasm/wasm-interpreter.cc",
-    "src/wasm/wasm-interpreter.h",
-    "src/wasm/wasm-js.cc",
-    "src/wasm/wasm-js.h",
-    "src/wasm/wasm-limits.h",
-    "src/wasm/wasm-module-builder.cc",
-    "src/wasm/wasm-module-builder.h",
-    "src/wasm/wasm-module.cc",
-    "src/wasm/wasm-module.h",
-    "src/wasm/wasm-objects.cc",
-    "src/wasm/wasm-objects.h",
-    "src/wasm/wasm-opcodes.cc",
-    "src/wasm/wasm-opcodes.h",
-    "src/wasm/wasm-result.cc",
-    "src/wasm/wasm-result.h",
-    "src/wasm/wasm-text.cc",
-    "src/wasm/wasm-text.h",
     "src/zone/accounting-allocator.cc",
     "src/zone/accounting-allocator.h",
     "src/zone/zone-allocator.h",
@@ -2734,18 +2683,6 @@ group("v8_fuzzers") {
     ":v8_simple_json_fuzzer",
     ":v8_simple_parser_fuzzer",
     ":v8_simple_regexp_fuzzer",
-    ":v8_simple_wasm_asmjs_fuzzer",
-    ":v8_simple_wasm_call_fuzzer",
-    ":v8_simple_wasm_code_fuzzer",
-    ":v8_simple_wasm_compile_fuzzer",
-    ":v8_simple_wasm_data_section_fuzzer",
-    ":v8_simple_wasm_function_sigs_section_fuzzer",
-    ":v8_simple_wasm_fuzzer",
-    ":v8_simple_wasm_globals_section_fuzzer",
-    ":v8_simple_wasm_imports_section_fuzzer",
-    ":v8_simple_wasm_memory_section_fuzzer",
-    ":v8_simple_wasm_names_section_fuzzer",
-    ":v8_simple_wasm_types_section_fuzzer",
   ]
 }
 
@@ -3032,271 +2969,4 @@ v8_source_set("regexp_fuzzer") {
 }
 
 v8_fuzzer("regexp_fuzzer") {
-}
-
-v8_source_set("wasm_module_runner") {
-  sources = [
-    "test/common/wasm/wasm-module-runner.cc",
-    "test/common/wasm/wasm-module-runner.h",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_source_set("wasm_fuzzer") {
-  sources = [
-    "test/fuzzer/wasm.cc",
-  ]
-
-  deps = [
-    ":fuzzer_support",
-    ":lib_wasm_fuzzer_common",
-    ":wasm_module_runner",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_fuzzer("wasm_fuzzer") {
-}
-
-v8_source_set("wasm_asmjs_fuzzer") {
-  sources = [
-    "test/fuzzer/wasm-asmjs.cc",
-  ]
-
-  deps = [
-    ":fuzzer_support",
-    ":lib_wasm_fuzzer_common",
-    ":wasm_module_runner",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_fuzzer("wasm_asmjs_fuzzer") {
-}
-
-v8_source_set("wasm_code_fuzzer") {
-  sources = [
-    "test/common/wasm/test-signatures.h",
-    "test/fuzzer/wasm-code.cc",
-  ]
-
-  deps = [
-    ":fuzzer_support",
-    ":lib_wasm_fuzzer_common",
-    ":wasm_module_runner",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_fuzzer("wasm_code_fuzzer") {
-}
-
-v8_source_set("wasm_call_fuzzer") {
-  sources = [
-    "test/common/wasm/test-signatures.h",
-    "test/fuzzer/wasm-call.cc",
-  ]
-
-  deps = [
-    ":fuzzer_support",
-    ":lib_wasm_fuzzer_common",
-    ":wasm_module_runner",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_fuzzer("wasm_call_fuzzer") {
-}
-
-v8_source_set("lib_wasm_fuzzer_common") {
-  sources = [
-    "test/fuzzer/wasm-fuzzer-common.cc",
-    "test/fuzzer/wasm-fuzzer-common.h",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_source_set("wasm_types_section_fuzzer") {
-  sources = [
-    "test/fuzzer/wasm-types-section.cc",
-  ]
-
-  deps = [
-    ":fuzzer_support",
-    ":lib_wasm_fuzzer_common",
-    ":wasm_module_runner",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_fuzzer("wasm_types_section_fuzzer") {
-}
-
-v8_source_set("wasm_names_section_fuzzer") {
-  sources = [
-    "test/fuzzer/wasm-names-section.cc",
-  ]
-
-  deps = [
-    ":fuzzer_support",
-    ":lib_wasm_fuzzer_common",
-    ":wasm_module_runner",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_fuzzer("wasm_names_section_fuzzer") {
-}
-
-v8_source_set("wasm_globals_section_fuzzer") {
-  sources = [
-    "test/fuzzer/wasm-globals-section.cc",
-  ]
-
-  deps = [
-    ":fuzzer_support",
-    ":lib_wasm_fuzzer_common",
-    ":wasm_module_runner",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_fuzzer("wasm_globals_section_fuzzer") {
-}
-
-v8_source_set("wasm_imports_section_fuzzer") {
-  sources = [
-    "test/fuzzer/wasm-imports-section.cc",
-  ]
-
-  deps = [
-    ":fuzzer_support",
-    ":lib_wasm_fuzzer_common",
-    ":wasm_module_runner",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_fuzzer("wasm_imports_section_fuzzer") {
-}
-
-v8_source_set("wasm_function_sigs_section_fuzzer") {
-  sources = [
-    "test/fuzzer/wasm-function-sigs-section.cc",
-  ]
-
-  deps = [
-    ":fuzzer_support",
-    ":lib_wasm_fuzzer_common",
-    ":wasm_module_runner",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_fuzzer("wasm_function_sigs_section_fuzzer") {
-}
-
-v8_source_set("wasm_memory_section_fuzzer") {
-  sources = [
-    "test/fuzzer/wasm-memory-section.cc",
-  ]
-
-  deps = [
-    ":fuzzer_support",
-    ":lib_wasm_fuzzer_common",
-    ":wasm_module_runner",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_fuzzer("wasm_memory_section_fuzzer") {
-}
-
-v8_source_set("wasm_data_section_fuzzer") {
-  sources = [
-    "test/fuzzer/wasm-data-section.cc",
-  ]
-
-  deps = [
-    ":fuzzer_support",
-    ":lib_wasm_fuzzer_common",
-    ":wasm_module_runner",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_fuzzer("wasm_data_section_fuzzer") {
-}
-
-v8_source_set("wasm_compile_fuzzer") {
-  sources = [
-    "test/common/wasm/test-signatures.h",
-    "test/fuzzer/wasm-compile.cc",
-  ]
-
-  deps = [
-    ":fuzzer_support",
-    ":lib_wasm_fuzzer_common",
-    ":wasm_module_runner",
-  ]
-
-  configs = [
-    ":external_config",
-    ":internal_config_base",
-  ]
-}
-
-v8_fuzzer("wasm_compile_fuzzer") {
 }

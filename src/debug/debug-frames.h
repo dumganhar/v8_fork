@@ -14,9 +14,12 @@ namespace v8 {
 namespace internal {
 
 // Forward declaration:
+
+#ifdef ENABLE_WASM
 namespace wasm {
 class InterpretedFrame;
 }
+#endif
 
 class FrameInspector {
  public:
@@ -60,7 +63,9 @@ class FrameInspector {
   StandardFrame* frame_;
   FrameSummary frame_summary_;
   std::unique_ptr<DeoptimizedFrameInfo> deoptimized_frame_;
+#ifdef ENABLE_WASM
   std::unique_ptr<wasm::InterpretedFrame> wasm_interpreted_frame_;
+#endif
   Isolate* isolate_;
   bool is_optimized_;
   bool is_interpreted_;

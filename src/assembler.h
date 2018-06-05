@@ -868,6 +868,7 @@ class ExternalReference BASE_EMBEDDED {
   static ExternalReference new_deoptimizer_function(Isolate* isolate);
   static ExternalReference compute_output_frames_function(Isolate* isolate);
 
+#ifdef ENABLE_WASM
   static ExternalReference wasm_f32_trunc(Isolate* isolate);
   static ExternalReference wasm_f32_floor(Isolate* isolate);
   static ExternalReference wasm_f32_ceil(Isolate* isolate);
@@ -893,14 +894,17 @@ class ExternalReference BASE_EMBEDDED {
   static ExternalReference wasm_word32_popcnt(Isolate* isolate);
   static ExternalReference wasm_word64_popcnt(Isolate* isolate);
   static ExternalReference wasm_float64_pow(Isolate* isolate);
+#endif
 
   static ExternalReference f64_acos_wrapper_function(Isolate* isolate);
   static ExternalReference f64_asin_wrapper_function(Isolate* isolate);
   static ExternalReference f64_mod_wrapper_function(Isolate* isolate);
 
+#ifdef ENABLE_WASM
   // Trap callback function for cctest/wasm/wasm-run-utils.h
   static ExternalReference wasm_call_trap_callback_for_testing(
       Isolate* isolate);
+#endif
 
   // Log support.
   static ExternalReference log_enter_external_function(Isolate* isolate);

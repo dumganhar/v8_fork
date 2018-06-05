@@ -1261,6 +1261,7 @@ void Builtins::Generate_CompileOptimizedConcurrent(MacroAssembler* masm) {
   GenerateTailCallToReturnedCode(masm, Runtime::kCompileOptimized_Concurrent);
 }
 
+#ifdef ENABLE_WASM
 void Builtins::Generate_InstantiateAsmJs(MacroAssembler* masm) {
   // ----------- S t a t e -------------
   //  -- rax : argument count (preserved for callee)
@@ -1329,6 +1330,7 @@ void Builtins::Generate_InstantiateAsmJs(MacroAssembler* masm) {
   // On failure, tail call back to regular js.
   GenerateTailCallToReturnedCode(masm, Runtime::kCompileLazy);
 }
+#endif
 
 static void GenerateMakeCodeYoungAgainCommon(MacroAssembler* masm) {
   // For now, we are relying on the fact that make_code_young doesn't do any
@@ -3198,6 +3200,7 @@ void Builtins::Generate_InterpreterOnStackReplacement(MacroAssembler* masm) {
   Generate_OnStackReplacementHelper(masm, true);
 }
 
+#ifdef ENABLE_WASM
 void Builtins::Generate_WasmCompileLazy(MacroAssembler* masm) {
   {
     FrameScope scope(masm, StackFrame::INTERNAL);
@@ -3235,6 +3238,7 @@ void Builtins::Generate_WasmCompileLazy(MacroAssembler* masm) {
   // Now jump to the instructions of the returned code object.
   __ jmp(r11);
 }
+#endif
 
 #undef __
 

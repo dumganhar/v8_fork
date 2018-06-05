@@ -12,7 +12,9 @@
 #include "src/compiler/node-matchers.h"
 #include "src/compiler/osr.h"
 #include "src/heap/heap-inl.h"
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
+#endif
 #include "src/x64/assembler-x64.h"
 #include "src/x64/macro-assembler-x64.h"
 
@@ -267,6 +269,7 @@ class OutOfLineRecordWrite final : public OutOfLineCode {
   RecordWriteMode const mode_;
 };
 
+#ifdef ENABLE_WASM
 class WasmOutOfLineTrap final : public OutOfLineCode {
  public:
   WasmOutOfLineTrap(CodeGenerator* gen, int pc, bool frame_elided,
@@ -308,6 +311,7 @@ class WasmOutOfLineTrap final : public OutOfLineCode {
   bool frame_elided_;
   int32_t position_;
 };
+#endif
 
 void EmitOOLTrapIfNeeded(Zone* zone, CodeGenerator* codegen,
                          InstructionCode opcode, size_t input_count,
@@ -315,9 +319,12 @@ void EmitOOLTrapIfNeeded(Zone* zone, CodeGenerator* codegen,
   const X64MemoryProtection protection =
       static_cast<X64MemoryProtection>(MiscField::decode(opcode));
   if (protection == X64MemoryProtection::kProtected) {
+    assert(false);
+#ifdef ENABLE_WASM
     const bool frame_elided = !codegen->frame_access_state()->has_frame();
     const int32_t position = i.InputInt32(input_count - 1);
     new (zone) WasmOutOfLineTrap(codegen, pc, frame_elided, position);
+#endif
   }
 }
 }  // namespace
@@ -2676,7 +2683,8 @@ void CodeGenerator::AssembleArchTrap(Instruction* instr,
       bool old_has_frame = __ has_frame();
       if (frame_elided_) {
         __ set_has_frame(true);
-        __ EnterFrame(StackFrame::WASM_COMPILED);
+        assert(false);
+        //cjh __ EnterFrame(StackFrame::WASM_COMPILED);
       }
       GenerateCallToTrap(trap_id);
       if (frame_elided_) {
@@ -2690,10 +2698,11 @@ void CodeGenerator::AssembleArchTrap(Instruction* instr,
         // We cannot test calls to the runtime in cctest/test-run-wasm.
         // Therefore we emit a call to C here instead of a call to the runtime.
         __ PrepareCallCFunction(0);
-        __ CallCFunction(
-            ExternalReference::wasm_call_trap_callback_for_testing(isolate()),
-            0);
-        __ LeaveFrame(StackFrame::WASM_COMPILED);
+        assert(false);
+        //cjh __ CallCFunction(
+        //     ExternalReference::wasm_call_trap_callback_for_testing(isolate()),
+        //     0);
+        // __ LeaveFrame(StackFrame::WASM_COMPILED);
         __ Ret();
       } else {
         gen_->AssembleSourcePosition(instr_);

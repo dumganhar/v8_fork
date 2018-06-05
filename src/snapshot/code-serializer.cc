@@ -15,8 +15,11 @@
 #include "src/snapshot/snapshot.h"
 #include "src/version.h"
 #include "src/visitors.h"
+
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
 #include "src/wasm/wasm-objects.h"
+#endif
 
 namespace v8 {
 namespace internal {
@@ -232,6 +235,7 @@ MaybeHandle<SharedFunctionInfo> CodeSerializer::Deserialize(
   return scope.CloseAndEscape(result);
 }
 
+#ifdef ENABLE_WASM
 WasmCompiledModuleSerializer::WasmCompiledModuleSerializer(
     Isolate* isolate, uint32_t source_hash, Handle<Context> native_context,
     Handle<SeqOneByteString> module_bytes)
@@ -319,6 +323,7 @@ void WasmCompiledModuleSerializer::SerializeCodeObject(
 bool WasmCompiledModuleSerializer::ElideObject(Object* obj) {
   return obj->IsWeakCell() || obj->IsForeign() || obj->IsBreakPointInfo();
 }
+#endif // #ifdef ENABLE_WASM
 
 class Checksum {
  public:

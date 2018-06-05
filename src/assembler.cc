@@ -64,7 +64,9 @@
 #include "src/simulator.h"  // For flushing instruction cache.
 #include "src/snapshot/serializer-common.h"
 #include "src/string-search.h"
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-external-refs.h"
+#endif
 
 // Include native regexp-macro-assembler.
 #ifndef V8_INTERPRETED_REGEXP
@@ -313,6 +315,7 @@ const int kLastChunkTag = 1;
 const int kCodeWithIdTag = 0;
 const int kDeoptReasonTag = 1;
 
+#ifdef ENABLE_WASM
 void RelocInfo::update_wasm_memory_reference(
     Isolate* isolate, Address old_base, Address new_base,
     ICacheFlushMode icache_flush_mode) {
@@ -358,6 +361,7 @@ void RelocInfo::update_wasm_function_table_size_reference(
   unchecked_update_wasm_size(isolate, updated_size_reference,
                              icache_flush_mode);
 }
+#endif
 
 void RelocInfo::set_target_address(Isolate* isolate, Address target,
                                    WriteBarrierMode write_barrier_mode,
@@ -1034,6 +1038,7 @@ ExternalReference ExternalReference::compute_output_frames_function(
       Redirect(isolate, FUNCTION_ADDR(Deoptimizer::ComputeOutputFrames)));
 }
 
+#ifdef ENABLE_WASM
 ExternalReference ExternalReference::wasm_f32_trunc(Isolate* isolate) {
   return ExternalReference(
       Redirect(isolate, FUNCTION_ADDR(wasm::f32_trunc_wrapper)));
@@ -1150,6 +1155,7 @@ ExternalReference ExternalReference::wasm_word64_popcnt(Isolate* isolate) {
   return ExternalReference(
       Redirect(isolate, FUNCTION_ADDR(wasm::word64_popcnt_wrapper)));
 }
+#endif // #ifdef ENABLE_WASM
 
 static void f64_acos_wrapper(double* param) {
   WriteDoubleValue(param, base::ieee754::acos(ReadDoubleValue(param)));
@@ -1169,10 +1175,12 @@ ExternalReference ExternalReference::f64_asin_wrapper_function(
   return ExternalReference(Redirect(isolate, FUNCTION_ADDR(f64_asin_wrapper)));
 }
 
+#ifdef ENABLE_WASM
 ExternalReference ExternalReference::wasm_float64_pow(Isolate* isolate) {
   return ExternalReference(
       Redirect(isolate, FUNCTION_ADDR(wasm::float64_pow_wrapper)));
 }
+#endif
 
 static void f64_mod_wrapper(double* param0, double* param1) {
   WriteDoubleValue(param0,
@@ -1184,11 +1192,13 @@ ExternalReference ExternalReference::f64_mod_wrapper_function(
   return ExternalReference(Redirect(isolate, FUNCTION_ADDR(f64_mod_wrapper)));
 }
 
+#ifdef ENABLE_WASM
 ExternalReference ExternalReference::wasm_call_trap_callback_for_testing(
     Isolate* isolate) {
   return ExternalReference(
       Redirect(isolate, FUNCTION_ADDR(wasm::call_trap_callback_for_testing)));
 }
+#endif
 
 ExternalReference ExternalReference::log_enter_external_function(
     Isolate* isolate) {

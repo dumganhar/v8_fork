@@ -10,7 +10,10 @@
 #include "src/frames-inl.h"
 #include "src/isolate-inl.h"
 #include "src/messages.h"
+
+#ifdef ENABLE_WASM
 #include "src/wasm/wasm-module.h"
+#endif
 
 namespace v8 {
 namespace internal {

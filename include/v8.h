@@ -108,7 +108,9 @@ class Private;
 class Uint32;
 class Utils;
 class Value;
+#ifdef ENABLE_WASM
 class WasmCompiledModule;
+#endif
 template <class T> class Local;
 template <class T>
 class MaybeLocal;
@@ -1773,8 +1775,10 @@ class V8_EXPORT ValueSerializer {
     virtual Maybe<uint32_t> GetSharedArrayBufferId(
         Isolate* isolate, Local<SharedArrayBuffer> shared_array_buffer);
 
+#ifdef ENABLE_WASM
     virtual Maybe<uint32_t> GetWasmModuleTransferId(
         Isolate* isolate, Local<WasmCompiledModule> module);
+#endif
     /**
      * Allocates memory for the buffer of at least the size provided. The actual
      * size (which may be greater or equal) is written to |actual_size|. If no
@@ -1886,12 +1890,14 @@ class V8_EXPORT ValueDeserializer {
      */
     virtual MaybeLocal<Object> ReadHostObject(Isolate* isolate);
 
+#ifdef ENABLE_WASM
     /**
      * Get a WasmCompiledModule given a transfer_id previously provided
      * by ValueSerializer::GetWasmModuleTransferId
      */
     virtual MaybeLocal<WasmCompiledModule> GetWasmModuleFromId(
         Isolate* isolate, uint32_t transfer_id);
+#endif
   };
 
   ValueDeserializer(Isolate* isolate, const uint8_t* data, size_t size);
@@ -1934,11 +1940,12 @@ class V8_EXPORT ValueDeserializer {
    */
   void SetSupportsLegacyWireFormat(bool supports_legacy_wire_format);
 
+#ifdef ENABLE_WASM
   /**
    * Expect inline wasm in the data stream (rather than in-memory transfer)
    */
   void SetExpectInlineWasm(bool allow_inline_wasm);
-
+#endif
   /**
    * Reads the underlying wire format version. Likely mostly to be useful to
    * legacy code reading old wire format versions. Must be called after
@@ -2239,7 +2246,9 @@ class V8_EXPORT Value : public Data {
    */
   bool IsProxy() const;
 
+#ifdef ENABLE_WASM
   bool IsWebAssemblyCompiledModule() const;
+#endif
 
   V8_WARN_UNUSED_RESULT MaybeLocal<Boolean> ToBoolean(
       Local<Context> context) const;
@@ -4051,6 +4060,7 @@ class V8_EXPORT Proxy : public Object {
   static void CheckCast(Value* obj);
 };
 
+#ifdef ENABLE_WASM
 // TODO(mtrofin): rename WasmCompiledModule to WasmModuleObject, for
 // consistency with internal APIs.
 class V8_EXPORT WasmCompiledModule : public Object {
@@ -4146,6 +4156,7 @@ class V8_EXPORT WasmModuleObjectBuilder final {
   std::vector<Buffer> received_buffers_;
   size_t total_size_ = 0;
 };
+#endif // #ifdef ENABLE_WASM
 
 #ifndef V8_ARRAY_BUFFER_INTERNAL_FIELD_COUNT
 // The number of required internal fields can be defined by embedder.
@@ -7449,6 +7460,7 @@ class V8_EXPORT Isolate {
   void SetAllowCodeGenerationFromStringsCallback(
       AllowCodeGenerationFromStringsCallback callback);
 
+#ifdef ENABLE_WASM
   /**
    * Embedder over{ride|load} injection points for wasm APIs.
    */
@@ -7456,7 +7468,7 @@ class V8_EXPORT Isolate {
   void SetWasmCompileCallback(ExtensionCallback callback);
   void SetWasmInstanceCallback(ExtensionCallback callback);
   void SetWasmInstantiateCallback(ExtensionCallback callback);
-
+#endif
   /**
   * Check if V8 is dead and therefore unusable.  This is the case after
   * fatal errors such as out-of-memory situations.
@@ -9764,12 +9776,14 @@ Proxy* Proxy::Cast(v8::Value* value) {
   return static_cast<Proxy*>(value);
 }
 
+#ifdef ENABLE_WASM
 WasmCompiledModule* WasmCompiledModule::Cast(v8::Value* value) {
 #ifdef V8_ENABLE_CHECKS
   CheckCast(value);
 #endif
   return static_cast<WasmCompiledModule*>(value);
 }
+#endif
 
 Promise::Resolver* Promise::Resolver::Cast(v8::Value* value) {
 #ifdef V8_ENABLE_CHECKS

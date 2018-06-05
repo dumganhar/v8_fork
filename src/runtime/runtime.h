@@ -135,8 +135,8 @@ namespace internal {
   F(NotifyDeoptimized, 1, 1)              \
   F(CompileForOnStackReplacement, 1, 1)   \
   F(TryInstallOptimizedCode, 1, 1)        \
-  F(ResolvePossiblyDirectEval, 6, 1)      \
-  F(InstantiateAsmJs, 4, 1)
+  F(ResolvePossiblyDirectEval, 6, 1)      
+/*cjh  F(InstantiateAsmJs, 4, 1) */
 
 #define FOR_EACH_INTRINSIC_DATE(F) \
   F(IsDate, 1, 1)                  \
@@ -563,6 +563,26 @@ namespace internal {
   F(SymbolDescriptiveString, 1, 1)   \
   F(SymbolIsPrivate, 1, 1)
 
+#ifdef ENABLE_WASM
+  F(CheckWasmWrapperElision, 2, 1)          // after ClearFunctionFeedback 
+  F(SerializeWasmModule, 1, 1)              // after SpeciesProtector
+  F(DeserializeWasmModule, 2, 1)              
+  F(IsAsmWasmCode, 1, 1)                      
+  F(IsWasmCode, 1, 1)  
+  F(ValidateWasmInstancesChain, 2, 1)       // after DisallowCodegenFromStrings  
+  F(ValidateWasmModuleState, 1, 1)            
+  F(ValidateWasmOrphanedInstance, 1, 1)       
+  F(SetWasmCompileControls, 2, 1)             
+  F(SetWasmInstantiateControls, 0, 1)         
+  F(SetWasmCompileFromPromiseOverload, 0, 1)  
+  F(ResetWasmOverloads, 0, 1)                 
+
+  F(WasmNumInterpretedCalls, 1, 1)            
+  F(RedirectToWasmInterpreter, 2, 1)
+
+
+#endif
+
 #define FOR_EACH_INTRINSIC_TEST(F)            \
   F(ConstructDouble, 2, 1)                    \
   F(ConstructConsString, 2, 1)                \
@@ -581,7 +601,6 @@ namespace internal {
   F(GetUndetectable, 0, 1)                    \
   F(GetCallable, 0, 1)                        \
   F(ClearFunctionFeedback, 1, 1)              \
-  F(CheckWasmWrapperElision, 2, 1)            \
   F(NotifyContextDisposed, 0, 1)              \
   F(SetAllocationTimeout, -1 /* 2 || 3 */, 1) \
   F(DebugPrint, 1, 1)                         \
@@ -618,21 +637,8 @@ namespace internal {
   F(HasFixedFloat64Elements, 1, 1)            \
   F(HasFixedUint8ClampedElements, 1, 1)       \
   F(SpeciesProtector, 0, 1)                   \
-  F(SerializeWasmModule, 1, 1)                \
-  F(DeserializeWasmModule, 2, 1)              \
-  F(IsAsmWasmCode, 1, 1)                      \
-  F(IsWasmCode, 1, 1)                         \
   F(DisallowCodegenFromStrings, 0, 1)         \
-  F(ValidateWasmInstancesChain, 2, 1)         \
-  F(ValidateWasmModuleState, 1, 1)            \
-  F(ValidateWasmOrphanedInstance, 1, 1)       \
-  F(SetWasmCompileControls, 2, 1)             \
-  F(SetWasmInstantiateControls, 0, 1)         \
-  F(SetWasmCompileFromPromiseOverload, 0, 1)  \
-  F(ResetWasmOverloads, 0, 1)                 \
-  F(HeapObjectVerify, 1, 1)                   \
-  F(WasmNumInterpretedCalls, 1, 1)            \
-  F(RedirectToWasmInterpreter, 2, 1)
+  F(HeapObjectVerify, 1, 1)               
 
 #define FOR_EACH_INTRINSIC_TYPEDARRAY(F) \
   F(ArrayBufferGetByteLength, 1, 1)      \
@@ -652,6 +658,7 @@ namespace internal {
   F(IsSharedInteger32TypedArray, 1, 1)   \
   F(TypedArraySpeciesCreateByLength, 2, 1)
 
+#ifdef ENABLE_WASM
 #define FOR_EACH_INTRINSIC_WASM(F)     \
   F(WasmGrowMemory, 1, 1)              \
   F(WasmMemorySize, 0, 1)              \
@@ -666,6 +673,8 @@ namespace internal {
   F(SetThreadInWasm, 0, 1)             \
   F(ClearThreadInWasm, 0, 1)           \
   F(WasmCompileLazy, 0, 1)
+
+#endif
 
 #define FOR_EACH_INTRINSIC_RETURN_PAIR(F) \
   F(LoadLookupSlotForCall, 1, 2)
@@ -724,8 +733,11 @@ namespace internal {
   FOR_EACH_INTRINSIC_STRINGS(F)             \
   FOR_EACH_INTRINSIC_SYMBOL(F)              \
   FOR_EACH_INTRINSIC_TEST(F)                \
-  FOR_EACH_INTRINSIC_TYPEDARRAY(F)          \
+  FOR_EACH_INTRINSIC_TYPEDARRAY(F)          
+
+#ifdef ENABLE_WASM
   FOR_EACH_INTRINSIC_WASM(F)
+#endif
 
 // FOR_EACH_INTRINSIC defines the list of all intrinsics, coming in 2 flavors,
 // either returning an object or a pair.

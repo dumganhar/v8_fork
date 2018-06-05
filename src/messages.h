@@ -128,6 +128,7 @@ class JSStackFrame : public StackFrameBase {
   friend class FrameArrayIterator;
 };
 
+#ifdef ENABLE_WASM
 class WasmStackFrame : public StackFrameBase {
  public:
   virtual ~WasmStackFrame() {}
@@ -197,6 +198,8 @@ class AsmJsWasmStackFrame : public WasmStackFrame {
   bool is_at_number_conversion_;
 };
 
+#endif // #ifdef ENABLE_WASM
+
 class FrameArrayIterator {
  public:
   FrameArrayIterator(Isolate* isolate, Handle<FrameArray> array,
@@ -213,8 +216,10 @@ class FrameArrayIterator {
   Handle<FrameArray> array_;
   int next_frame_ix_;
 
+#ifdef ENABLE_WASM
   WasmStackFrame wasm_frame_;
   AsmJsWasmStackFrame asm_wasm_frame_;
+#endif
   JSStackFrame js_frame_;
 };
 
