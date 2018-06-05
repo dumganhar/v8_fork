@@ -900,11 +900,9 @@ class ExternalReference BASE_EMBEDDED {
   static ExternalReference f64_asin_wrapper_function(Isolate* isolate);
   static ExternalReference f64_mod_wrapper_function(Isolate* isolate);
 
-#ifdef ENABLE_WASM
   // Trap callback function for cctest/wasm/wasm-run-utils.h
   static ExternalReference wasm_call_trap_callback_for_testing(
       Isolate* isolate);
-#endif
 
   // Log support.
   static ExternalReference log_enter_external_function(Isolate* isolate);

@@ -39,10 +39,7 @@ class Isolate;
 class RootVisitor;
 class StackFrameIteratorBase;
 class ThreadLocalTop;
-
-#ifdef ENABLE_WASM
 class WasmInstanceObject;
-#endif
 
 class InnerPointerToCodeCache {
  public:
@@ -107,6 +104,10 @@ class StackHandler BASE_EMBEDDED {
   V(EXIT, ExitFrame)                                     \
   V(JAVA_SCRIPT, JavaScriptFrame)                        \
   V(OPTIMIZED, OptimizedFrame)                           \
+  V(WASM_COMPILED, WasmCompiledFrame)                    \
+  V(WASM_TO_JS, WasmToJsFrame)                           \
+  V(JS_TO_WASM, JsToWasmFrame)                           \
+  V(WASM_INTERPRETER_ENTRY, WasmInterpreterEntryFrame)   \
   V(INTERPRETED, InterpretedFrame)                       \
   V(STUB, StubFrame)                                     \
   V(STUB_FAILURE_TRAMPOLINE, StubFailureTrampolineFrame) \
@@ -818,14 +819,11 @@ class FrameSummary BASE_EMBEDDED {
 
 // Subclasses for the different summary kinds:
 #define FRAME_SUMMARY_VARIANTS(F)                                             \
-  F(JAVA_SCRIPT, JavaScriptFrameSummary, java_script_summary_, JavaScript)    
-
-#ifdef ENABLE_WASM
+  F(JAVA_SCRIPT, JavaScriptFrameSummary, java_script_summary_, JavaScript)    \
   F(WASM_COMPILED, WasmCompiledFrameSummary, wasm_compiled_summary_,          \
     WasmCompiled)                                                             \
   F(WASM_INTERPRETED, WasmInterpretedFrameSummary, wasm_interpreted_summary_, \
     WasmInterpreted)
-#endif
 
 #define FRAME_SUMMARY_KIND(kind, type, field, desc) kind,
   enum Kind { FRAME_SUMMARY_VARIANTS(FRAME_SUMMARY_KIND) };
@@ -870,7 +868,6 @@ class FrameSummary BASE_EMBEDDED {
     bool is_constructor_;
   };
 
-#ifdef ENABLE_WASM
   class WasmFrameSummary : public FrameSummaryBase {
    protected:
     WasmFrameSummary(Isolate*, Kind, Handle<WasmInstanceObject>,
@@ -921,7 +918,6 @@ class FrameSummary BASE_EMBEDDED {
     uint32_t function_index_;
     int byte_offset_;
   };
-#endif // #ifdef ENABLE_WASM
 
 #undef FRAME_SUMMARY_FIELD
 #define FRAME_SUMMARY_CONS(kind, type, field, desc) \
@@ -1322,8 +1318,6 @@ class BuiltinFrame final : public JavaScriptFrame {
   friend class StackFrameIteratorBase;
 };
 
-#ifdef ENABLE_WASM
-
 class WasmCompiledFrame final : public StandardFrame {
  public:
   Type type() const override { return WASM_COMPILED; }
@@ -1425,8 +1419,6 @@ class JsToWasmFrame : public StubFrame {
  private:
   friend class StackFrameIteratorBase;
 };
-
-#endif // #ifdef ENABLE_WASM
 
 class InternalFrame: public StandardFrame {
  public:

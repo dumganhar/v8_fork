@@ -1192,13 +1192,16 @@ ExternalReference ExternalReference::f64_mod_wrapper_function(
   return ExternalReference(Redirect(isolate, FUNCTION_ADDR(f64_mod_wrapper)));
 }
 
-#ifdef ENABLE_WASM
 ExternalReference ExternalReference::wasm_call_trap_callback_for_testing(
     Isolate* isolate) {
+#ifdef ENABLE_WASM
   return ExternalReference(
       Redirect(isolate, FUNCTION_ADDR(wasm::call_trap_callback_for_testing)));
-}
+#else
+  return ExternalReference(
+      Redirect(isolate, nullptr));
 #endif
+}
 
 ExternalReference ExternalReference::log_enter_external_function(
     Isolate* isolate) {

@@ -484,7 +484,6 @@ StackFrame::Type StackFrame::ComputeType(const StackFrameIteratorBase* iterator,
           return JAVA_SCRIPT;
         case Code::OPTIMIZED_FUNCTION:
           return OPTIMIZED;
-#ifdef ENABLE_WASM
         case Code::WASM_FUNCTION:
           return WASM_COMPILED;
         case Code::WASM_TO_JS_FUNCTION:
@@ -493,7 +492,6 @@ StackFrame::Type StackFrame::ComputeType(const StackFrameIteratorBase* iterator,
           return JS_TO_WASM;
         case Code::WASM_INTERPRETER_ENTRY:
           return WASM_INTERPRETER_ENTRY;
-#endif
         default:
           // All other types should have an explicit marker
           break;
@@ -515,12 +513,10 @@ StackFrame::Type StackFrame::ComputeType(const StackFrameIteratorBase* iterator,
     case INTERNAL:
     case CONSTRUCT:
     case ARGUMENTS_ADAPTOR:
-#ifdef ENABLE_WASM
     case WASM_TO_JS:
     case WASM_COMPILED:
       return candidate;
     case JS_TO_WASM:
-#endif
     case JAVA_SCRIPT:
     case OPTIMIZED:
     case INTERPRETED:
@@ -816,14 +812,12 @@ void StandardFrame::IterateCompiledFrame(RootVisitor* v) const {
       case STUB:
       case INTERNAL:
       case CONSTRUCT:
-#ifdef ENABLE_WASM
       case JS_TO_WASM:
       case WASM_TO_JS:
       case WASM_COMPILED:
       case WASM_INTERPRETER_ENTRY:
         frame_header_size = TypedFrameConstants::kFixedFrameSizeFromFp;
         break;
-#endif
       case JAVA_SCRIPT:
       case OPTIMIZED:
       case INTERPRETED:
@@ -1201,8 +1195,6 @@ Handle<Context> FrameSummary::JavaScriptFrameSummary::native_context() const {
   return handle(function_->context()->native_context(), isolate());
 }
 
-#ifdef ENABLE_WASM
-
 FrameSummary::WasmFrameSummary::WasmFrameSummary(
     Isolate* isolate, FrameSummary::Kind kind,
     Handle<WasmInstanceObject> instance, bool at_to_number_conversion)
@@ -1211,7 +1203,11 @@ FrameSummary::WasmFrameSummary::WasmFrameSummary(
       at_to_number_conversion_(at_to_number_conversion) {}
 
 Handle<Object> FrameSummary::WasmFrameSummary::receiver() const {
+#ifdef ENABLE_WASM
   return wasm_instance_->GetIsolate()->global_proxy();
+#else
+  return handle((Object*)nullptr, isolate());
+#endif
 }
 
 #define WASM_SUMMARY_DISPATCH(type, name)                                      \
@@ -1229,6 +1225,7 @@ WASM_SUMMARY_DISPATCH(int, byte_offset)
 #undef WASM_SUMMARY_DISPATCH
 
 int FrameSummary::WasmFrameSummary::SourcePosition() const {
+#ifdef ENABLE_WASM
   int offset = byte_offset();
   Handle<WasmCompiledModule> compiled_module(wasm_instance()->compiled_module(),
                                              isolate());
@@ -1239,21 +1236,36 @@ int FrameSummary::WasmFrameSummary::SourcePosition() const {
     offset += compiled_module->GetFunctionOffset(function_index());
   }
   return offset;
+#else
+  return 0;
+#endif
 }
 
 Handle<Script> FrameSummary::WasmFrameSummary::script() const {
+#ifdef ENABLE_WASM
   return handle(wasm_instance()->compiled_module()->script());
+#else
+  return handle((Script*)nullptr);
+#endif
 }
 
 Handle<String> FrameSummary::WasmFrameSummary::FunctionName() const {
+#ifdef ENABLE_WASM
   Handle<WasmCompiledModule> compiled_module(
       wasm_instance()->compiled_module());
   return WasmCompiledModule::GetFunctionName(compiled_module->GetIsolate(),
                                              compiled_module, function_index());
+#else
+  return handle((String*)nullptr);
+#endif
 }
 
 Handle<Context> FrameSummary::WasmFrameSummary::native_context() const {
+#ifdef ENABLE_WASM
   return wasm_instance()->compiled_module()->native_context();
+#else
+  return handle((Context*)nullptr);
+#endif
 }
 
 FrameSummary::WasmCompiledFrameSummary::WasmCompiledFrameSummary(
@@ -1283,8 +1295,6 @@ FrameSummary::WasmInterpretedFrameSummary::WasmInterpretedFrameSummary(
     : WasmFrameSummary(isolate, WASM_INTERPRETED, instance, false),
       function_index_(function_index),
       byte_offset_(byte_offset) {}
-
-#endif // #ifdef ENABLE_WASM
 
 FrameSummary::~FrameSummary() {
 #define FRAME_SUMMARY_DESTR(kind, type, field, desc) \
@@ -1330,20 +1340,15 @@ FrameSummary FrameSummary::Get(const StandardFrame* frame, int index) {
     switch (base_.kind()) {                      \
       case JAVA_SCRIPT:                          \
         return java_script_summary_.name();      \
+      case WASM_COMPILED:                        \
+        return wasm_compiled_summary_.name();    \
+      case WASM_INTERPRETED:                     \
+        return wasm_interpreted_summary_.name(); \
       default:                                   \
         UNREACHABLE();                           \
         return ret{};                            \
     }                                            \
   }
-
-#ifdef ENABLE_WASM
-  // belong to the code from above switch case
-      case WASM_COMPILED:                        \
-        return wasm_compiled_summary_.name();    \
-      case WASM_INTERPRETED:                     \
-        return wasm_interpreted_summary_.name(); \
-
-#endif
 
 FRAME_SUMMARY_DISPATCH(Handle<Object>, receiver)
 FRAME_SUMMARY_DISPATCH(int, code_offset)
@@ -1712,10 +1717,9 @@ void StackFrame::PrintIndex(StringStream* accumulator,
   accumulator->Add((mode == OVERVIEW) ? "%5d: " : "[%d]: ", index);
 }
 
-#ifdef ENABLE_WASM
-
 void WasmCompiledFrame::Print(StringStream* accumulator, PrintMode mode,
                               int index) const {
+#ifdef ENABLE_WASM
   PrintIndex(accumulator, mode, index);
   accumulator->Add("WASM [");
   Script* script = this->script();
@@ -1733,6 +1737,7 @@ void WasmCompiledFrame::Print(StringStream* accumulator, PrintMode mode,
   accumulator->Add("], function #%u ('%s'), pc=%p, pos=%d\n",
                    this->function_index(), func_name, pc, this->position());
   if (mode != OVERVIEW) accumulator->Add("\n");
+#endif
 }
 
 Code* WasmCompiledFrame::unchecked_code() const {
@@ -1748,10 +1753,14 @@ Address WasmCompiledFrame::GetCallerStackPointer() const {
 }
 
 WasmInstanceObject* WasmCompiledFrame::wasm_instance() const {
+#ifdef ENABLE_WASM
   WasmInstanceObject* obj = wasm::GetOwningWasmInstance(LookupCode());
   // This is a live stack frame; it must have a live instance.
   DCHECK_NOT_NULL(obj);
   return obj;
+#else
+  return nullptr;
+#endif
 }
 
 uint32_t WasmCompiledFrame::function_index() const {
@@ -1759,7 +1768,11 @@ uint32_t WasmCompiledFrame::function_index() const {
 }
 
 Script* WasmCompiledFrame::script() const {
+#ifdef ENABLE_WASM
   return wasm_instance()->compiled_module()->script();
+#else
+  return nullptr;
+#endif
 }
 
 int WasmCompiledFrame::position() const {
@@ -1768,6 +1781,7 @@ int WasmCompiledFrame::position() const {
 
 void WasmCompiledFrame::Summarize(List<FrameSummary>* functions,
                                   FrameSummary::Mode mode) const {
+#ifdef ENABLE_WASM
   DCHECK_EQ(0, functions->length());
   Handle<Code> code(LookupCode(), isolate());
   int offset = static_cast<int>(pc() - code->instruction_start());
@@ -1775,6 +1789,7 @@ void WasmCompiledFrame::Summarize(List<FrameSummary>* functions,
   FrameSummary::WasmCompiledFrameSummary summary(
       isolate(), instance, code, offset, at_to_number_conversion());
   functions->Add(summary);
+#endif
 }
 
 bool WasmCompiledFrame::at_to_number_conversion() const {
@@ -1815,6 +1830,7 @@ void WasmInterpreterEntryFrame::Print(StringStream* accumulator, PrintMode mode,
 
 void WasmInterpreterEntryFrame::Summarize(List<FrameSummary>* functions,
                                           FrameSummary::Mode mode) const {
+#ifdef ENABLE_WASM
   Handle<WasmInstanceObject> instance(wasm_instance(), isolate());
   std::vector<std::pair<uint32_t, int>> interpreted_stack =
       instance->debug_info()->GetInterpretedStack(fp());
@@ -1824,6 +1840,7 @@ void WasmInterpreterEntryFrame::Summarize(List<FrameSummary>* functions,
                                                       e.first, e.second);
     functions->Add(summary);
   }
+#endif
 }
 
 Code* WasmInterpreterEntryFrame::unchecked_code() const {
@@ -1831,14 +1848,22 @@ Code* WasmInterpreterEntryFrame::unchecked_code() const {
 }
 
 WasmInstanceObject* WasmInterpreterEntryFrame::wasm_instance() const {
+#ifdef ENABLE_WASM
   WasmInstanceObject* ret = wasm::GetOwningWasmInstance(LookupCode());
   // This is a live stack frame, there must be a live wasm instance available.
   DCHECK_NOT_NULL(ret);
   return ret;
+#else
+  return nullptr;
+#endif
 }
 
 Script* WasmInterpreterEntryFrame::script() const {
+#ifdef ENABLE_WASM
   return wasm_instance()->compiled_module()->script();
+#else
+  return nullptr;
+#endif
 }
 
 int WasmInterpreterEntryFrame::position() const {
@@ -1846,14 +1871,16 @@ int WasmInterpreterEntryFrame::position() const {
 }
 
 Object* WasmInterpreterEntryFrame::context() const {
+#ifdef ENABLE_WASM
   return wasm_instance()->compiled_module()->ptr_to_native_context();
+#else
+  return nullptr;
+#endif
 }
 
 Address WasmInterpreterEntryFrame::GetCallerStackPointer() const {
   return fp() + ExitFrameConstants::kCallerSPOffset;
 }
-
-#endif // #ifdef ENABLE_WASM
 
 namespace {
 
